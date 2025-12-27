@@ -91,11 +91,6 @@ class TypstCompiler {
       final mainTypPath = path.join(projectPath, 'main.typ');
       final typstExecutable = await _getTypstExecutable();
 
-      print('📄 TypstCompiler: projectPath = $projectPath');
-      print('📄 TypstCompiler: mainTypPath = $mainTypPath');
-      print('📄 TypstCompiler: outputPdfPath = $outputPdfPath');
-      print('📄 TypstCompiler: languageCode = $languageCode');
-
       final result = await Process.run(
         typstExecutable,
         [
@@ -106,9 +101,8 @@ class TypstCompiler {
         workingDirectory: projectPath,
       );
 
-      print('📄 TypstCompiler: exitCode = ${result.exitCode}');
       if (result.exitCode != 0) {
-        print('📄 TypstCompiler: stderr = ${result.stderr}');
+        // Compilation failed - stderr is already captured in error result
       }
 
       // Step 4: Check result

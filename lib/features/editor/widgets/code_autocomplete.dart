@@ -198,7 +198,7 @@ class _CodeAutocompleteState extends State<CodeAutocomplete> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: _getTypeColor(theme, suggestion.type).withOpacity(0.2),
+                color: _getTypeColor(theme, suggestion.type).withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
