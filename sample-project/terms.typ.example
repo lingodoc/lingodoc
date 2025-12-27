@@ -1,0 +1,47 @@
+// terms.typ.example
+// Example project terms - Copy this to terms.typ and customize for your project
+//
+// This file demonstrates how to define language-independent terms that are used
+// consistently throughout your document across all languages.
+
+#let terms = (
+  // Example system names
+  system-a: "System A",
+  system-b: "System B",
+
+  // Example product names
+  product-x: "Product X",
+  product-y: "Product Y",
+
+  // Example version numbers
+  version-1: "Version 1.0",
+  version-2: "Version 2.0",
+
+  // Example abbreviations
+  api: "API",
+  ui: "UI",
+  ux: "UX",
+)
+
+// Helper function to get a term
+// Returns the term if it exists, otherwise returns a warning
+#let term(key) = {
+  if key in terms {
+    terms.at(key)
+  } else {
+    text(fill: red)[⚠️ UNDEFINED: #key]
+  }
+}
+
+// Optional: Helper function to get a term with custom formatting
+#let term-code(key) = {
+  raw(term(key))
+}
+
+#let term-bold(key) = {
+  strong(term(key))
+}
+
+#let term-italic(key) = {
+  emph(term(key))
+}

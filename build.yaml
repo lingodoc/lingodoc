@@ -1,0 +1,12 @@
+targets:
+  $default:
+    builders:
+      freezed:
+        options:
+          # Generate copyWith methods
+          copy_with: true
+          # Generate toJson/fromJson
+          to_json: true
+          from_json: true
+          # Use union types for variants
+          union: true
