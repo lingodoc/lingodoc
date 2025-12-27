@@ -72,6 +72,8 @@ All language versions in a single .typ file:
 ## Development Workflow
 
 ### Initial Setup
+
+#### All Platforms
 \`\`\`bash
 # Install Flutter (https://flutter.dev/docs/get-started/install)
 flutter doctor
@@ -85,9 +87,29 @@ flutter pub get
 
 # Generate Freezed models
 flutter pub run build_runner build --delete-conflicting-outputs
+\`\`\`
 
+#### Linux
+\`\`\`bash
 # Run app
-flutter run -d linux  # or macos, windows
+flutter run -d linux
+\`\`\`
+
+#### macOS
+\`\`\`bash
+# Run app
+flutter run -d macos
+\`\`\`
+
+#### Windows
+\`\`\`powershell
+# Run app (PowerShell or Command Prompt)
+flutter run -d windows
+
+# Or build release version
+flutter build windows --release
+
+# Executable will be at: build\windows\x64\runner\Release\lingodoc_flutter.exe
 \`\`\`
 
 ### Code Generation
@@ -151,9 +173,82 @@ flutter test --coverage
 - Commit format: \`Step N: Description of changes\`
 - PR titles: \`[Step N] Feature name\`
 
+## Windows-Specific Notes
+
+### Build Requirements
+- Windows 10 or later (64-bit)
+- Visual Studio 2022 or Visual Studio Build Tools 2022
+  - "Desktop development with C++" workload required
+  - Windows 10 SDK (10.0.17763.0 or later)
+- Flutter SDK configured for Windows desktop
+
+### Path Handling
+LingoDoc uses the `path` package for all file system operations, ensuring proper handling of Windows-style paths (backslashes) vs. Unix-style paths (forward slashes). No manual path conversion is needed.
+
+### Typst Installation on Windows
+- Typst binary is automatically downloaded as a `.zip` archive
+- Installed to `%APPDATA%\lingodoc_flutter\bin\typst.exe`
+- No executable permissions required (unlike Linux/macOS)
+- Binary is found via:
+  1. System PATH (if Typst installed separately)
+  2. Application support directory (`getApplicationSupportDirectory()`)
+
+### Process Execution
+- Uses `where` command instead of `which` for executable lookup
+- All `Process.run()` calls include timeout protection (5 seconds)
+- No `chmod` operations on Windows (only on Unix-like systems)
+
+### Building on Windows
+
+#### Development Build
+\`\`\`powershell
+# From project root
+flutter run -d windows
+\`\`\`
+
+#### Release Build
+\`\`\`powershell
+# Build optimized executable
+flutter build windows --release
+
+# Output location
+# build\windows\x64\runner\Release\lingodoc_flutter.exe
+
+# Distribution: Copy entire Release folder
+# Contains: lingodoc_flutter.exe, flutter_windows.dll, data/, and other dependencies
+\`\`\`
+
+#### Common Issues
+
+**Visual Studio not found:**
+```powershell
+flutter doctor -v
+# Install Visual Studio 2022 with "Desktop development with C++" workload
+```
+
+**CMake errors:**
+```powershell
+# Ensure CMake is accessible (included with Visual Studio)
+cmake --version
+```
+
+**DLL not found errors:**
+- Always distribute the entire `Release` folder
+- Do not move the `.exe` file separately from the DLLs
+
+### Testing on Windows
+\`\`\`powershell
+# Run all tests
+flutter test
+
+# Analyze code
+flutter analyze
+\`\`\`
+
 ## Resources
 
 - [Flutter Desktop Documentation](https://docs.flutter.dev/desktop)
+- [Flutter Windows Requirements](https://docs.flutter.dev/get-started/install/windows#windows-setup)
 - [Riverpod Documentation](https://riverpod.dev/)
 - [Freezed Documentation](https://pub.dev/packages/freezed)
 - [Typst Documentation](https://typst.app/docs)

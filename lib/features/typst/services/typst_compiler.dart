@@ -21,13 +21,19 @@ class TypstCompiler {
 
     // Try system PATH first
     try {
-      final result = await Process.run('which', ['typst']);
+      final result = await Process.run(
+        Platform.isWindows ? 'where' : 'which',
+        ['typst'],
+      ).timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => ProcessResult(0, 1, '', 'timeout'),
+      );
       if (result.exitCode == 0) {
         _cachedTypstPath = 'typst';
         return _cachedTypstPath!;
       }
     } catch (e) {
-      // which command not available or failed
+      // which/where command not available or failed
     }
 
     // Try installation directories
