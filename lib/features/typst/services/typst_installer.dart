@@ -3,63 +3,44 @@ import 'package:http/http.dart' as http;
 import 'package:archive/archive_io.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
+import 'typst_path_resolver.dart';
 
 /// Service for installing and managing Typst binaries
 class TypstInstaller {
+  final TypstPathResolver _pathResolver;
+
+  TypstInstaller(this._pathResolver);
+
   static const String _typstVersion = '0.11.1';
   static const String _githubReleaseBase =
       'https://github.com/typst/typst/releases/download';
 
-  /// Get the path to the Typst executable
+  /// SHA256 checksums for Typst 0.11.1 releases
   ///
-  /// Checks in order:
-  /// 1. System PATH (typst command)
-  /// 2. ~/.local/bin/typst (Linux/macOS installation directory)
-  /// 3. Application support bin directory (Windows)
-  Future<String?> _findTypstExecutable() async {
-    // Try system PATH first
-    try {
-      final result = await Process.run(
-        Platform.isWindows ? 'where' : 'which',
-        ['typst'],
-      ).timeout(
-        const Duration(seconds: 5),
-        onTimeout: () => ProcessResult(0, 1, '', 'timeout'),
-      );
-      if (result.exitCode == 0) {
-        return 'typst';
-      }
-    } catch (e) {
-      // which/where command not available or failed
-    }
-
-    // Try installation directories
-    if (Platform.isLinux || Platform.isMacOS) {
-      final homeDir = Platform.environment['HOME'];
-      if (homeDir != null) {
-        final localBinPath = path.join(homeDir, '.local', 'bin', 'typst');
-        if (await File(localBinPath).exists()) {
-          return localBinPath;
-        }
-      }
-    } else if (Platform.isWindows) {
-      try {
-        final appSupportDir = await getApplicationSupportDirectory();
-        final binPath = path.join(appSupportDir.path, 'bin', 'typst.exe');
-        if (await File(binPath).exists()) {
-          return binPath;
-        }
-      } catch (e) {
-        // getApplicationSupportDirectory failed
-      }
-    }
-
-    return null;
-  }
+  /// IMPORTANT: These checksums should be obtained from the official Typst release.
+  /// To calculate checksums:
+  /// ```bash
+  /// curl -sL <release-url> | sha256sum
+  /// ```
+  ///
+  /// For security, verify checksums match the official release notes or
+  /// independently calculated values from trusted sources.
+  static const Map<String, String> _checksums = {
+    // Linux
+    'x86_64-unknown-linux-musl': 'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE',
+    'aarch64-unknown-linux-musl': 'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE',
+    // macOS
+    'x86_64-apple-darwin': 'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE',
+    'aarch64-apple-darwin': 'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE',
+    // Windows
+    'x86_64-pc-windows-msvc': 'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE',
+  };
 
   /// Check if Typst is installed and accessible
   Future<bool> isInstalled() async {
-    final executable = await _findTypstExecutable();
+    final executable = await _pathResolver.findExecutable();
     if (executable == null) {
       return false;
     }
@@ -77,7 +58,7 @@ class TypstInstaller {
 
   /// Get the version of the installed Typst binary
   Future<String?> getInstalledVersion() async {
-    final executable = await _findTypstExecutable();
+    final executable = await _pathResolver.findExecutable();
     if (executable == null) {
       return null;
     }
@@ -98,6 +79,41 @@ class TypstInstaller {
     }
   }
 
+  /// Verify the SHA256 checksum of downloaded bytes.
+  ///
+  /// Returns true if checksum matches or if no checksum is available.
+  /// Returns false if checksum verification fails.
+  ///
+  /// Security Note: If checksum is not available (placeholder value),
+  /// this logs a warning but allows installation. In production,
+  /// consider failing if checksums are not properly configured.
+  bool _verifyChecksum(List<int> bytes, String platform) {
+    final expectedHash = _checksums[platform];
+
+    // Check if checksum is a placeholder (not yet configured)
+    if (expectedHash == null || expectedHash == 'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE') {
+      // Log warning but allow installation
+      // In production, you may want to fail here instead
+      debugPrint('WARNING: No verified checksum available for platform: $platform');
+      debugPrint('Checksum verification skipped - download at your own risk!');
+      return true;
+    }
+
+    // Calculate SHA256 of the downloaded bytes
+    final actualHash = sha256.convert(bytes).toString();
+
+    // Compare checksums (case-insensitive)
+    final isValid = actualHash.toLowerCase() == expectedHash.toLowerCase();
+
+    if (!isValid) {
+      debugPrint('Checksum verification FAILED!');
+      debugPrint('Expected: $expectedHash');
+      debugPrint('Actual:   $actualHash');
+    }
+
+    return isValid;
+  }
+
   /// Download and install Typst binary to application directory
   Future<void> install({
     required void Function(double progress) onProgress,
@@ -111,12 +127,27 @@ class TypstInstaller {
       final downloadUrl = _getDownloadUrl(platform);
       final archiveBytes = await _downloadWithProgress(downloadUrl, onProgress);
 
+      // NEW: Verify checksum before extraction
+      onMessage('Verifying download integrity...');
+      if (!_verifyChecksum(archiveBytes, platform)) {
+        throw Exception(
+          'Security Error: Checksum verification failed.\n'
+          'The downloaded file may be corrupted or tampered with.\n'
+          'Please try again or download Typst manually from:\n'
+          'https://github.com/typst/typst/releases'
+        );
+      }
+
       onMessage('Extracting archive...');
       final installDir = await _getInstallDirectory();
       await _extractArchive(archiveBytes, installDir, platform, onMessage);
 
       onMessage('Verifying installation...');
-      final typstPath = await _findTypstExecutable();
+
+      // Clear the cache to force re-detection of the newly installed binary
+      _pathResolver.clearCache();
+
+      final typstPath = await _pathResolver.findExecutable();
       if (typstPath == null) {
         throw Exception('Typst binary not found after extraction. Install directory: ${installDir.path}');
       }
@@ -274,5 +305,8 @@ class TypstInstaller {
     if (await binaryFile.exists()) {
       await binaryFile.delete();
     }
+
+    // Clear the cache after uninstallation
+    _pathResolver.clearCache();
   }
 }

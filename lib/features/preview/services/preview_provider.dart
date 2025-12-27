@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../typst/services/typst_compiler.dart';
+import '../../typst/services/typst_path_resolver.dart';
 import '../../typst/models/compilation_result.dart';
 
 /// State for PDF preview
@@ -38,7 +39,8 @@ class PdfPreviewState {
 
 /// Provider for the TypstCompiler service
 final typstCompilerProvider = Provider<TypstCompiler>((ref) {
-  return TypstCompiler();
+  final pathResolver = ref.watch(typstPathResolverProvider);
+  return TypstCompiler(pathResolver);
 });
 
 /// Controller for managing PDF compilation and preview

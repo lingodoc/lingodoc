@@ -36,6 +36,9 @@ dependencies:
   http: ^1.2.0
   archive: ^4.0.7
 
+  # Cryptography (for checksum verification)
+  crypto: ^3.0.3
+
   # UI Components
   flutter_treeview: ^1.0.7+1
   split_view: ^3.2.1

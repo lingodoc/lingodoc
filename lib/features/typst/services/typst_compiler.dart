@@ -1,66 +1,21 @@
 import 'dart:io';
 import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart';
 import '../models/compilation_result.dart';
+import 'typst_path_resolver.dart';
 
 /// Service for compiling Typst documents
 class TypstCompiler {
-  String? _cachedTypstPath;
+  final TypstPathResolver _pathResolver;
+
+  TypstCompiler(this._pathResolver);
 
   /// Get the path to the Typst executable
   ///
-  /// Checks in order:
-  /// 1. System PATH (typst command)
-  /// 2. ~/.local/bin/typst (Linux/macOS installation directory)
-  /// 3. Application support bin directory (Windows)
+  /// Uses the shared TypstPathResolver to find the executable.
+  /// Defaults to 'typst' if not found (will fail later with clear error).
   Future<String> _getTypstExecutable() async {
-    // Return cached path if available
-    if (_cachedTypstPath != null) {
-      return _cachedTypstPath!;
-    }
-
-    // Try system PATH first
-    try {
-      final result = await Process.run(
-        Platform.isWindows ? 'where' : 'which',
-        ['typst'],
-      ).timeout(
-        const Duration(seconds: 5),
-        onTimeout: () => ProcessResult(0, 1, '', 'timeout'),
-      );
-      if (result.exitCode == 0) {
-        _cachedTypstPath = 'typst';
-        return _cachedTypstPath!;
-      }
-    } catch (e) {
-      // which/where command not available or failed
-    }
-
-    // Try installation directories
-    if (Platform.isLinux || Platform.isMacOS) {
-      final homeDir = Platform.environment['HOME'];
-      if (homeDir != null) {
-        final localBinPath = path.join(homeDir, '.local', 'bin', 'typst');
-        if (await File(localBinPath).exists()) {
-          _cachedTypstPath = localBinPath;
-          return _cachedTypstPath!;
-        }
-      }
-    } else if (Platform.isWindows) {
-      try {
-        final appSupportDir = await getApplicationSupportDirectory();
-        final binPath = path.join(appSupportDir.path, 'bin', 'typst.exe');
-        if (await File(binPath).exists()) {
-          _cachedTypstPath = binPath;
-          return _cachedTypstPath!;
-        }
-      } catch (e) {
-        // getApplicationSupportDirectory failed
-      }
-    }
-
-    // Default to 'typst' and let it fail if not found
-    return 'typst';
+    final path = await _pathResolver.findExecutable();
+    return path ?? 'typst';
   }
   /// Compile a Typst document for a specific language
   ///

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'typst_installer.dart';
+import 'typst_path_resolver.dart';
 
 /// State for Typst installation status
 class TypstStatus {
@@ -28,7 +29,8 @@ class TypstStatus {
 
 /// Provider for TypstInstaller service
 final typstInstallerProvider = Provider<TypstInstaller>((ref) {
-  return TypstInstaller();
+  final pathResolver = ref.watch(typstPathResolverProvider);
+  return TypstInstaller(pathResolver);
 });
 
 /// Provider for Typst installation status (Riverpod 3.x)

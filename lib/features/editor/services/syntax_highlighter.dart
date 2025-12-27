@@ -1,2 +1,2 @@
-// TODO: Step 11 - Implement Typst syntax highlighting
-// Syntax highlighter for Typst markup language
+// Export Typst syntax highlighting implementation
+export 'typst_highlighter.dart';

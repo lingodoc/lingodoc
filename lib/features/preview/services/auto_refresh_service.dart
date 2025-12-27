@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../typst/services/typst_compiler.dart';
-import '../../typst/models/compilation_result.dart';
-
-/// Service for managing auto-refresh of PDF previews
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as path;
+import '../../typst/services/typst_compiler.dart';
+import '../../typst/models/compilation_result.dart';
+import 'preview_provider.dart' show typstCompilerProvider;
 
 class AutoRefreshService {
   final Ref ref;
@@ -322,9 +321,4 @@ class AutoRefreshNotifier extends Notifier<AutoRefreshState> {
 /// Provider for auto-refresh state
 final autoRefreshProvider = NotifierProvider<AutoRefreshNotifier, AutoRefreshState>(() {
   return AutoRefreshNotifier();
-});
-
-/// Provider for typst compiler (re-export for convenience)
-final typstCompilerProvider = Provider<TypstCompiler>((ref) {
-  return TypstCompiler();
 });
