@@ -2,8 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_highlight/flutter_highlight.dart';
-import '../services/typst_highlighter.dart';
+import '../services/typst_syntax_highlighter.dart';
 import '../services/autocomplete_service.dart';
 import '../services/editor_service.dart';
 import '../models/suggestion.dart';
@@ -45,7 +44,7 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
     _focusNode = FocusNode();
     _autocompleteService = AutocompleteService(projectPath: widget.projectPath);
     _controller.addListener(_onTextChanged);
-    
+
     // Start auto-save timer (10 seconds)
     _startAutoSaveTimer();
   }
@@ -206,15 +205,16 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
                       // Highlighted code display (read-only visual)
                       SizedBox(
                         width: double.infinity,
-                        child: HighlightView(
-                          _controller.text,
-                          language: 'dart', // Using dart as base, will style with Typst colors
-                          theme: TypstHighlighter.getTheme(theme.brightness),
-                          padding: EdgeInsets.zero,
-                          textStyle: const TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 14,
-                            height: 1.5,
+                        child: RichText(
+                          text: TypstSyntaxHighlighter(
+                            brightness: theme.brightness,
+                          ).highlight(
+                            _controller.text,
+                            baseStyle: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 14,
+                              height: 1.5,
+                            ),
                           ),
                         ),
                       ),
