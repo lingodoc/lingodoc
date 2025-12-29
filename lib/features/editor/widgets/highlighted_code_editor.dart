@@ -2,7 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/typst_syntax_highlighter.dart';
+import 'package:flutter_code_editor/flutter_code_editor.dart';
+import 'package:flutter_highlight/themes/vs.dart'; // Light theme
+import 'package:flutter_highlight/themes/vs2015.dart'; // Dark theme
+import '../models/typst_language_mode.dart';
 import '../services/autocomplete_service.dart';
 import '../services/editor_service.dart';
 import '../models/suggestion.dart';
@@ -29,7 +32,7 @@ class HighlightedCodeEditor extends ConsumerStatefulWidget {
 }
 
 class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
-  late TextEditingController _controller;
+  late CodeController _controller;
   late FocusNode _focusNode;
   late AutocompleteService _autocompleteService;
   bool _isDirty = false;
@@ -40,9 +43,17 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.initialContent);
-    _focusNode = FocusNode();
+
+    // Initialize autocomplete service
     _autocompleteService = AutocompleteService(projectPath: widget.projectPath);
+
+    // Create controller with Typst language mode
+    _controller = CodeController(
+      text: widget.initialContent,
+      language: typstMode,
+    );
+
+    _focusNode = FocusNode();
     _controller.addListener(_onTextChanged);
 
     // Start auto-save timer (10 seconds)
@@ -52,6 +63,8 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
   @override
   void didUpdateWidget(HighlightedCodeEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    // Update content if file path changed (new file opened)
     if (widget.filePath != oldWidget.filePath) {
       _controller.text = widget.initialContent;
       _isDirty = false;
@@ -77,32 +90,53 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
   }
 
   void _onTextChanged() {
-    if (!_isDirty) {
-      setState(() => _isDirty = true);
-    }
-    widget.onChanged?.call(_controller.text);
-    _updateAutocomplete();
+    // Defer all state changes to avoid calling them during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        if (!_isDirty) {
+          setState(() => _isDirty = true);
+        }
+        widget.onChanged?.call(_controller.text);
+        _updateAutocomplete();
+      }
+    });
   }
 
   void _updateAutocomplete() {
     if (!_isTypstFile()) {
-      setState(() {
-        _showAutocomplete = false;
-        _suggestions = [];
-      });
+      if (mounted) {
+        setState(() {
+          _showAutocomplete = false;
+          _suggestions = [];
+        });
+      }
       return;
     }
 
-    final cursorPosition = _controller.selection.base.offset;
+    final cursorPosition = _controller.selection.baseOffset;
+
+    // Guard against invalid cursor position (can be -1 when no selection)
+    if (cursorPosition < 0 || cursorPosition > _controller.text.length) {
+      if (mounted) {
+        setState(() {
+          _showAutocomplete = false;
+          _suggestions = [];
+        });
+      }
+      return;
+    }
+
     final suggestions = _autocompleteService.getContextSuggestions(
       _controller.text,
       cursorPosition,
     );
 
-    setState(() {
-      _showAutocomplete = suggestions.isNotEmpty;
-      _suggestions = suggestions;
-    });
+    if (mounted) {
+      setState(() {
+        _showAutocomplete = suggestions.isNotEmpty;
+        _suggestions = suggestions;
+      });
+    }
   }
 
   bool _isTypstFile() {
@@ -112,6 +146,7 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Container(
       color: theme.colorScheme.surface,
@@ -129,7 +164,7 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
                     onInvoke: (_) => _handleSave(),
                   ),
                 },
-                child: _buildEditor(theme),
+                child: _buildEditor(theme, isDarkMode),
               ),
             ),
           ),
@@ -185,102 +220,48 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
     );
   }
 
-  Widget _buildEditor(ThemeData theme) {
-    // Use syntax-highlighted view for .typ files
-    if (_isTypstFile()) {
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          return Stack(
-            children: [
-              // Editor with syntax highlighting
-              SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minWidth: constraints.maxWidth - 32, // Account for padding
-                    minHeight: constraints.maxHeight - 32,
-                  ),
-                  child: Stack(
-                    children: [
-                      // Highlighted code display (read-only visual)
-                      SizedBox(
-                        width: double.infinity,
-                        child: RichText(
-                          text: TypstSyntaxHighlighter(
-                            brightness: theme.brightness,
-                          ).highlight(
-                            _controller.text,
-                            baseStyle: const TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 14,
-                              height: 1.5,
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Transparent editable TextField overlay
-                      SizedBox(
-                        width: double.infinity,
-                        child: TextField(
-                          controller: _controller,
-                          focusNode: _focusNode,
-                          readOnly: widget.readOnly,
-                          maxLines: null,
-                          style: TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 14,
-                            height: 1.5,
-                            color: Colors.transparent, // Make text transparent to show highlighted version
-                          ),
-                          cursorColor: theme.colorScheme.primary,
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+  Widget _buildEditor(ThemeData theme, bool isDarkMode) {
+    // Use flutter_code_editor with syntax highlighting
+    return Stack(
+      children: [
+        CodeTheme(
+          data: CodeThemeData(styles: isDarkMode ? vs2015Theme : vsTheme),
+          child: CodeField(
+            controller: _controller,
+            focusNode: _focusNode,
+            readOnly: widget.readOnly,
+            textStyle: const TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 14,
+            ),
+            gutterStyle: GutterStyle(
+              showLineNumbers: true,
+              textStyle: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 12,
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
               ),
-              // Autocomplete overlay
-              if (_showAutocomplete && _suggestions.isNotEmpty)
-                Positioned(
-                  left: 16,
-                  top: _calculateAutocompletePosition(),
-                  child: _buildAutocompleteOverlay(theme),
-                ),
-            ],
-          );
-        },
-      );
-    }
-
-    // Plain text editor for non-.typ files
-    return TextField(
-      controller: _controller,
-      focusNode: _focusNode,
-      readOnly: widget.readOnly,
-      maxLines: null,
-      expands: true,
-      style: TextStyle(
-        fontFamily: 'monospace',
-        fontSize: 14,
-        height: 1.5,
-        color: theme.colorScheme.onSurface,
-      ),
-      decoration: const InputDecoration(
-        border: InputBorder.none,
-        contentPadding: EdgeInsets.all(16),
-        hintText: 'Start typing...',
-      ),
-      textAlignVertical: TextAlignVertical.top,
+              margin: 10,
+              width: 40,
+            ),
+            expands: true,
+          ),
+        ),
+        // Autocomplete overlay
+        if (_showAutocomplete && _suggestions.isNotEmpty)
+          Positioned(
+            left: 80, // Account for line numbers
+            top: _calculateAutocompletePosition(),
+            child: _buildAutocompleteOverlay(theme),
+          ),
+      ],
     );
   }
 
   Widget _buildStatusBar(ThemeData theme) {
-    final lineCount = _controller.text.split('\n').length;
-    final charCount = _controller.text.length;
+    final text = _controller.text;
+    final lineCount = text.split('\n').length;
+    final charCount = text.length;
 
     return Container(
       height: 24,
@@ -311,21 +292,21 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
 
   void _handleSave() async {
     debugPrint('🔧 HighlightedCodeEditor: Save triggered for ${widget.filePath}');
-    
+
     // Find the tab index for this file
     final editorState = ref.read(editorProvider);
     final tabIndex = editorState.tabs.indexWhere((tab) => tab.filePath == widget.filePath);
-    
+
     if (tabIndex == -1) {
       debugPrint('❌ HighlightedCodeEditor: Tab not found for ${widget.filePath}');
       return;
     }
-    
+
     debugPrint('🔧 HighlightedCodeEditor: Calling EditorService.saveTab($tabIndex)');
-    
+
     // Call the EditorService to save the file
     await ref.read(editorProvider.notifier).saveTab(tabIndex);
-    
+
     // Mark as not dirty after successful save
     setState(() => _isDirty = false);
   }
@@ -394,19 +375,21 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
   }
 
   void _applySuggestion(Suggestion suggestion) {
-    final text = _controller.text;
-    final cursorPos = _controller.selection.base.offset;
-    
-    // Simple insertion - in real implementation, you'd handle replacement
-    final newText = text.substring(0, cursorPos) + 
-                   suggestion.insertText + 
-                   text.substring(cursorPos);
-    
+    final cursorPos = _controller.selection.baseOffset;
+    final currentText = _controller.text;
+
+    // Create new text with suggestion inserted
+    final newText = currentText.substring(0, cursorPos) +
+        suggestion.insertText +
+        currentText.substring(cursorPos);
+
+    // Update controller text
     _controller.text = newText;
-    _controller.selection = TextSelection.collapsed(
-      offset: cursorPos + suggestion.insertText.length,
-    );
-    
+
+    // Move cursor to end of inserted text
+    final newCursorPos = cursorPos + suggestion.insertText.length;
+    _controller.selection = TextSelection.collapsed(offset: newCursorPos);
+
     setState(() {
       _showAutocomplete = false;
       _suggestions = [];

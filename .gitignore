@@ -48,3 +48,6 @@ app.*.map.json
 /output/
 .serena/
 .claude/
+
+# Sample project (for local testing only)
+/sample-project/

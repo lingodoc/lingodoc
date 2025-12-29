@@ -54,6 +54,11 @@ dependencies:
   # PDF Viewing
   pdfrx: ^1.0.82
 
+  # Code Editor
+  flutter_code_editor: ^0.3.0
+  flutter_highlight: ^0.7.0
+  highlight: ^0.7.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

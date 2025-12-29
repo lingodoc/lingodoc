@@ -66,8 +66,18 @@ class _DetachedPreviewWindowState extends ConsumerState<DetachedPreviewWindow> {
         ref.read(autoRefreshProvider.notifier).setError(message);
         // Show subtle error indicator without intrusive snackbar
         debugPrint('Auto-refresh compilation failed: $message');
+        if (stderr != null && stderr.isNotEmpty) {
+          debugPrint('Typst compiler error:\n$stderr');
+        }
       },
     );
+  }
+
+  @override
+  void dispose() {
+    // Cleanup is now handled in PopScope's onPopInvoked callback
+    // This ensures resources are released BEFORE GL context is destroyed
+    super.dispose();
   }
 
   @override
@@ -75,7 +85,17 @@ class _DetachedPreviewWindowState extends ConsumerState<DetachedPreviewWindow> {
     final windowState = ref.watch(detachableWindowProvider);
     final theme = Theme.of(context);
 
-    return Scaffold(
+    // Wrap in PopScope to handle window close gracefully
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+        if (didPop) {
+          // Stop auto-refresh service BEFORE window closes and GL context is destroyed
+          final autoRefreshService = ref.read(autoRefreshServiceProvider);
+          autoRefreshService.stop();
+        }
+      },
+      child: Scaffold(
       backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         title: const Text('LingoDoc - Preview'),
@@ -97,6 +117,7 @@ class _DetachedPreviewWindowState extends ConsumerState<DetachedPreviewWindow> {
         ],
       ),
       body: _buildDetachedPreview(context, windowState),
+      ),
     );
   }
 

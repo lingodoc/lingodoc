@@ -84,6 +84,9 @@ class _PreviewPanelState extends ConsumerState<PreviewPanel> {
         ref.read(autoRefreshProvider.notifier).setError(message);
         // Show subtle error indicator without intrusive snackbar
         debugPrint('Auto-refresh compilation failed: $message');
+        if (stderr != null && stderr.isNotEmpty) {
+          debugPrint('Typst compiler error:\n$stderr');
+        }
       },
     );
   }
