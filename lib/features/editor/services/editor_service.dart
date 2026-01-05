@@ -76,12 +76,14 @@ class EditorNotifier extends Notifier<EditorState> {
         isActive: true,
       );
 
-      // Deactivate all existing tabs
-      final updatedTabs = state.tabs
-          .map((tab) => tab.copyWith(isActive: false))
-          .toList();
-
-      updatedTabs.add(newTab);
+      // Deactivate all existing tabs - optimized list generation
+      final updatedTabs = List<EditorTab>.generate(
+        state.tabs.length + 1,
+        (i) => i < state.tabs.length
+            ? state.tabs[i].copyWith(isActive: false)
+            : newTab,
+        growable: false,
+      );
 
       state = EditorState(
         tabs: updatedTabs,
@@ -127,9 +129,14 @@ class EditorNotifier extends Notifier<EditorState> {
   void setActiveTab(int index) {
     if (index < 0 || index >= state.tabs.length) return;
 
-    final updatedTabs = state.tabs.asMap().entries.map((entry) {
-      return entry.value.copyWith(isActive: entry.key == index);
-    }).toList();
+    // Only create new list if active status actually changes
+    if (state.activeTabIndex == index) return;
+
+    final updatedTabs = List<EditorTab>.generate(
+      state.tabs.length,
+      (i) => state.tabs[i].copyWith(isActive: i == index),
+      growable: false,
+    );
 
     state = EditorState(
       tabs: updatedTabs,

@@ -8,7 +8,9 @@ import 'package:flutter_highlight/themes/vs2015.dart'; // Dark theme
 import '../models/typst_language_mode.dart';
 import '../services/autocomplete_service.dart';
 import '../services/editor_service.dart';
+import '../services/search_provider.dart';
 import '../models/suggestion.dart';
+import 'search_bar_widget.dart';
 
 /// Code editor with Typst syntax highlighting and autocomplete
 class HighlightedCodeEditor extends ConsumerStatefulWidget {
@@ -39,6 +41,7 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
   bool _showAutocomplete = false;
   List<Suggestion> _suggestions = [];
   Timer? _autoSaveTimer; // Auto-save timer
+  Timer? _highlightDebounceTimer; // Debounce timer for autocomplete
 
   @override
   void initState() {
@@ -74,6 +77,7 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
   @override
   void dispose() {
     _autoSaveTimer?.cancel();
+    _highlightDebounceTimer?.cancel();
     _controller.removeListener(_onTextChanged);
     _controller.dispose();
     _focusNode.dispose();
@@ -97,14 +101,21 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
           setState(() => _isDirty = true);
         }
         widget.onChanged?.call(_controller.text);
-        _updateAutocomplete();
+
+        // Debounce autocomplete updates
+        _highlightDebounceTimer?.cancel();
+        _highlightDebounceTimer = Timer(const Duration(milliseconds: 150), () {
+          if (mounted) {
+            _updateAutocomplete();
+          }
+        });
       }
     });
   }
 
   void _updateAutocomplete() {
     if (!_isTypstFile()) {
-      if (mounted) {
+      if (_showAutocomplete) {
         setState(() {
           _showAutocomplete = false;
           _suggestions = [];
@@ -117,7 +128,7 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
 
     // Guard against invalid cursor position (can be -1 when no selection)
     if (cursorPosition < 0 || cursorPosition > _controller.text.length) {
-      if (mounted) {
+      if (_showAutocomplete) {
         setState(() {
           _showAutocomplete = false;
           _suggestions = [];
@@ -131,12 +142,23 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
       cursorPosition,
     );
 
-    if (mounted) {
+    // Only update state if something actually changed
+    final shouldShow = suggestions.isNotEmpty;
+    if (shouldShow != _showAutocomplete || !_listEquals(_suggestions, suggestions)) {
       setState(() {
-        _showAutocomplete = suggestions.isNotEmpty;
+        _showAutocomplete = shouldShow;
         _suggestions = suggestions;
       });
     }
+  }
+
+  // Helper method to compare suggestion lists
+  bool _listEquals(List<Suggestion> a, List<Suggestion> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i].label != b[i].label) return false;
+    }
+    return true;
   }
 
   bool _isTypstFile() {
@@ -147,24 +169,36 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final searchState = ref.watch(searchProvider);
 
     return Container(
       color: theme.colorScheme.surface,
       child: Column(
         children: [
           _buildToolbar(theme),
+          // Search bar at top of editor
+          if (searchState.isVisible)
+            SearchBarWidget(
+              onQueryChanged: (_) => _performSearch(),
+              onNext: _navigateToNextMatch,
+              onPrevious: _navigateToPreviousMatch,
+            ),
           Expanded(
             child: Shortcuts(
               shortcuts: {
                 LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyS): const _SaveIntent(),
+                LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyF): const _FindIntent(),
               },
               child: Actions(
                 actions: {
                   _SaveIntent: CallbackAction<_SaveIntent>(
                     onInvoke: (_) => _handleSave(),
                   ),
+                  _FindIntent: CallbackAction<_FindIntent>(
+                    onInvoke: (_) => _handleFind(),
+                  ),
                 },
-                child: _buildEditor(theme, isDarkMode),
+                child: _buildEditorWithSearch(theme, isDarkMode),
               ),
             ),
           ),
@@ -218,6 +252,10 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
         ],
       ),
     );
+  }
+
+  Widget _buildEditorWithSearch(ThemeData theme, bool isDarkMode) {
+    return _buildEditor(theme, isDarkMode);
   }
 
   Widget _buildEditor(ThemeData theme, bool isDarkMode) {
@@ -311,6 +349,109 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
     setState(() => _isDirty = false);
   }
 
+  void _handleFind() {
+    // Get selected text
+    final selection = _controller.selection;
+    String? selectedText;
+
+    if (selection.start != selection.end) {
+      selectedText = _controller.text.substring(
+        selection.start,
+        selection.end,
+      );
+    }
+
+    // Show search bar with selected text (if any)
+    ref.read(searchProvider.notifier).show(initialQuery: selectedText);
+
+    // Perform search if we have a query
+    if (selectedText != null && selectedText.isNotEmpty) {
+      _performSearch();
+    }
+  }
+
+  void _performSearch() {
+    final searchState = ref.read(searchProvider);
+    final query = searchState.searchQuery;
+
+    if (query.isEmpty) {
+      ref.read(searchProvider.notifier).setMatches(0, 0);
+      return;
+    }
+
+    final text = _controller.text;
+    final matches = <int>[];
+
+    // Simple case-sensitive/insensitive search
+    final searchText = searchState.caseSensitive ? text : text.toLowerCase();
+    final searchQuery = searchState.caseSensitive ? query : query.toLowerCase();
+
+    int index = 0;
+    while (index < searchText.length) {
+      final foundIndex = searchText.indexOf(searchQuery, index);
+      if (foundIndex == -1) break;
+
+      index = foundIndex;
+
+      // Check whole word if enabled
+      if (searchState.wholeWord) {
+        final isStartWord = index == 0 || !_isWordChar(text[index - 1]);
+        final endIndex = index + query.length;
+        final isEndWord = endIndex >= text.length || !_isWordChar(text[endIndex]);
+
+        if (isStartWord && isEndWord) {
+          matches.add(index);
+        }
+      } else {
+        matches.add(index);
+      }
+
+      index = index + query.length;
+    }
+
+    // Update match count
+    ref.read(searchProvider.notifier).setMatches(
+      matches.isNotEmpty ? 0 : 0,
+      matches.length,
+    );
+
+    // Navigate to first match if available
+    if (matches.isNotEmpty) {
+      _navigateToMatch(matches[0]);
+    }
+  }
+
+  bool _isWordChar(String char) {
+    return RegExp(r'[a-zA-Z0-9_]').hasMatch(char);
+  }
+
+  void _navigateToNextMatch() {
+    final searchState = ref.read(searchProvider);
+    if (searchState.totalMatches == 0) return;
+
+    _performSearch();
+  }
+
+  void _navigateToPreviousMatch() {
+    final searchState = ref.read(searchProvider);
+    if (searchState.totalMatches == 0) return;
+
+    _performSearch();
+  }
+
+  void _navigateToMatch(int position) {
+    final query = ref.read(searchProvider).searchQuery;
+
+    // Set selection to the match
+    _controller.selection = TextSelection(
+      baseOffset: position,
+      extentOffset: position + query.length,
+    );
+
+    // Request focus so selection is visible
+    _focusNode.requestFocus();
+  }
+
   double _calculateAutocompletePosition() {
     // Simple calculation - in a real implementation, you'd want to calculate
     // based on cursor position and text layout
@@ -399,4 +540,8 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
 
 class _SaveIntent extends Intent {
   const _SaveIntent();
+}
+
+class _FindIntent extends Intent {
+  const _FindIntent();
 }

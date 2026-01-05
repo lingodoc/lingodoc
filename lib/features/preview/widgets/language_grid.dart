@@ -167,12 +167,14 @@ class _LanguageGridState extends ConsumerState<LanguageGrid> {
                   textAlign: TextAlign.center,
                 ),
               ),
-              // PDF viewer with synchronized scrolling
+              // PDF viewer with synchronized scrolling - wrapped for state preservation
               Expanded(
-                child: PdfViewer(
+                child: _KeepAlivePdfViewer(
+                  key: ValueKey(langCode),
                   pdfPath: _pdfPaths[langCode],
                   languageCode: langCode,
-                  externalMatrixNotifier: _sharedMatrixNotifier,
+                  sharedMatrixNotifier: _sharedMatrixNotifier,
+                  currentScrollingLanguage: _currentScrollingLanguage,
                   onMatrixChanged: (matrix) {
                     // Only update if this viewer is the one being scrolled
                     if (_currentScrollingLanguage == null || _currentScrollingLanguage == langCode) {
@@ -327,5 +329,48 @@ class _LanguageGridState extends ConsumerState<LanguageGrid> {
         _compilingCount = 0;
       });
     }
+  }
+}
+
+/// Wrapper widget that preserves PDF viewer state using AutomaticKeepAliveClientMixin
+/// This prevents PDF viewers from being rebuilt when the grid changes
+class _KeepAlivePdfViewer extends StatefulWidget {
+  final String? pdfPath;
+  final String? languageCode;
+  final ValueNotifier<Matrix4?> sharedMatrixNotifier;
+  final String? currentScrollingLanguage;
+  final void Function(Matrix4) onMatrixChanged;
+  final VoidCallback onError;
+
+  const _KeepAlivePdfViewer({
+    super.key,
+    required this.pdfPath,
+    required this.languageCode,
+    required this.sharedMatrixNotifier,
+    required this.currentScrollingLanguage,
+    required this.onMatrixChanged,
+    required this.onError,
+  });
+
+  @override
+  State<_KeepAlivePdfViewer> createState() => _KeepAlivePdfViewerState();
+}
+
+class _KeepAlivePdfViewerState extends State<_KeepAlivePdfViewer>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+
+    return PdfViewer(
+      pdfPath: widget.pdfPath,
+      languageCode: widget.languageCode,
+      externalMatrixNotifier: widget.sharedMatrixNotifier,
+      onMatrixChanged: widget.onMatrixChanged,
+      onError: widget.onError,
+    );
   }
 }

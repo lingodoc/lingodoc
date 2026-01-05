@@ -39,6 +39,12 @@ class _PreviewPanelState extends ConsumerState<PreviewPanel> {
   bool _isCompiling = false;
   bool _isGridMode = false; // Toggle between single and multi-language view
 
+  // Track configuration state to prevent unnecessary reconfiguration
+  String? _lastConfiguredProjectPath;
+  String? _lastConfiguredLanguage;
+  String? _lastConfiguredOutputDir;
+  bool _autoRefreshInitialized = false;
+
   @override
   void initState() {
     super.initState();
@@ -114,14 +120,30 @@ class _PreviewPanelState extends ConsumerState<PreviewPanel> {
     }
 
     // Initialize auto-refresh based on project settings
-    if (config != null) {
-      final autoRefreshState = ref.read(autoRefreshProvider);
-      final shouldBeEnabled = config.projectSettings.autoCompile;
-      final autoRefreshService = ref.read(autoRefreshServiceProvider);
+    if (config != null && _selectedLanguage != null) {
+      final projectState = ref.read(projectTreeProvider);
+      final projectPath = projectState.projectPath;
+      final outputDir = config.projectSettings.outputDirectory;
 
-      // Only update if state differs from project setting
-      if (autoRefreshState.isEnabled != shouldBeEnabled) {
+      // Only reconfigure if settings actually changed
+      final needsReconfigure =
+          projectPath != _lastConfiguredProjectPath ||
+          _selectedLanguage != _lastConfiguredLanguage ||
+          outputDir != _lastConfiguredOutputDir ||
+          !_autoRefreshInitialized;
+
+      if (needsReconfigure) {
+        _lastConfiguredProjectPath = projectPath;
+        _lastConfiguredLanguage = _selectedLanguage;
+        _lastConfiguredOutputDir = outputDir;
+        _autoRefreshInitialized = true;
+
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+
+          final shouldBeEnabled = config.projectSettings.autoCompile;
+          final autoRefreshService = ref.read(autoRefreshServiceProvider);
+
           if (shouldBeEnabled) {
             ref.read(autoRefreshProvider.notifier).enable();
             _configureAutoRefresh();
@@ -130,11 +152,6 @@ class _PreviewPanelState extends ConsumerState<PreviewPanel> {
             ref.read(autoRefreshProvider.notifier).disable();
             autoRefreshService.stop();
           }
-        });
-      } else if (shouldBeEnabled) {
-        // Auto-refresh is already enabled, just reconfigure if settings changed
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _configureAutoRefresh();
         });
       }
     }

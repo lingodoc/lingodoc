@@ -6,11 +6,13 @@ import 'package:split_view/split_view.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
 import '../../features/project/widgets/project_tree.dart';
+import '../../features/project/widgets/new_project_wizard.dart';
 import '../../features/project/services/project_state.dart';
 import '../../features/editor/widgets/editor_tabs.dart';
 import '../../features/editor/services/editor_service.dart';
 import '../../features/preview/widgets/preview_panel.dart';
 import '../../features/preview/services/detachable_window_service.dart';
+import '../../features/editor/services/search_provider.dart';
 
 /// Intent for save action
 class SaveIntent extends Intent {
@@ -188,6 +190,12 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
               label: 'File',
               items: [
                 _MenuItem(
+                  label: 'New Project...',
+                  icon: Icons.create_new_folder,
+                  shortcut: 'Ctrl+Shift+N',
+                  onTap: () => _handleNewProject(),
+                ),
+                _MenuItem(
                   label: 'Open Project...',
                   icon: Icons.folder_open,
                   shortcut: 'Ctrl+O',
@@ -235,7 +243,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                   label: 'Find...',
                   icon: Icons.search,
                   shortcut: 'Ctrl+F',
-                  onTap: () {}, // TODO: Step 12
+                  onTap: () => ref.read(searchProvider.notifier).toggle(),
                 ),
                 _MenuItem(
                   label: 'Replace...',
@@ -368,6 +376,18 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
         ],
       ),
     );
+  }
+
+  Future<void> _handleNewProject() async {
+    final projectPath = await showDialog<String>(
+      context: context,
+      builder: (context) => const NewProjectWizard(),
+    );
+
+    if (projectPath != null && mounted) {
+      // Load the newly created project
+      await ref.read(projectTreeProvider.notifier).loadProject(projectPath);
+    }
   }
 
   Future<void> _handleOpenProject() async {

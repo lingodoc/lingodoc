@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart' as pdfrx;
+import '../../../core/services/timer_service.dart';
 
 /// Widget for displaying a single PDF document using pdfrx
 class PdfViewer extends StatefulWidget {
@@ -32,11 +33,16 @@ class _PdfViewerState extends State<PdfViewer> {
   String? _lastLoadedPath;
   DateTime? _lastFileModTime;
   int? _savedPageNumber; // Track page number for restoration
-  Timer? _fileWatchTimer; // Timer for periodic file check
-  Timer? _restorationRetryTimer; // Timer for retry logic
+  Timer? _restorationRetryTimer; // Timer for retry logic (not managed by TimerService due to short lifecycle)
   int _restorationAttempts = 0;
   static const int _maxRestorationAttempts = 10;
   static const Duration _restorationRetryInterval = Duration(milliseconds: 100);
+
+  // Timer service for centralized timer management
+  final TimerService _timerService = TimerService();
+
+  // Unique timer ID for this viewer instance
+  late final String _fileWatchTimerId;
 
   // Use a UniqueKey that only changes when path changes, not on file modifications
   Key? _pdfViewerKey;
@@ -44,6 +50,9 @@ class _PdfViewerState extends State<PdfViewer> {
   @override
   void initState() {
     super.initState();
+
+    // Generate unique timer ID for this viewer instance
+    _fileWatchTimerId = 'pdf_viewer_${widget.languageCode ?? "default"}_${DateTime.now().millisecondsSinceEpoch}';
 
     // Initialize PDF viewer key based on path
     if (widget.pdfPath != null) {
@@ -58,10 +67,12 @@ class _PdfViewerState extends State<PdfViewer> {
     // Listen to controller changes and notify others
     _controller.addListener(_onControllerChanged);
 
-    // Start periodic file check for automatic reloading (every 500ms)
-    _fileWatchTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
-      _checkIfFileModified();
-    });
+    // Start periodic file check for automatic reloading (every 2000ms) using TimerService
+    _timerService.register(
+      _fileWatchTimerId,
+      const Duration(milliseconds: 2000),
+      _checkIfFileModified,
+    );
   }
   
   void _onExternalMatrixChanged() {
@@ -114,8 +125,12 @@ class _PdfViewerState extends State<PdfViewer> {
   
   @override
   void dispose() {
-    _fileWatchTimer?.cancel();
+    // Cancel file watch timer using TimerService
+    _timerService.cancel(_fileWatchTimerId);
+
+    // Cancel restoration retry timer (not managed by TimerService)
     _restorationRetryTimer?.cancel();
+
     widget.externalMatrixNotifier?.removeListener(_onExternalMatrixChanged);
     _controller.removeListener(_onControllerChanged);
     super.dispose();
@@ -128,12 +143,27 @@ class _PdfViewerState extends State<PdfViewer> {
     _restorationAttempts = 0;
   }
 
+  /// Resume file watching after restoration completes
+  void _resumeFileWatching() {
+    if (mounted && widget.pdfPath != null) {
+      _timerService.register(
+        _fileWatchTimerId,
+        const Duration(milliseconds: 2000),
+        _checkIfFileModified,
+      );
+      debugPrint('📄 PdfViewer: Resumed file watching');
+    }
+  }
+
   /// Attempt to restore the saved page number with retry logic
   Future<void> _attemptPageRestoration() async {
     if (_savedPageNumber == null) {
       debugPrint('📄 PdfViewer: No saved page to restore');
       return;
     }
+
+    // Pause file watching during restoration to prevent timer conflicts
+    _timerService.cancel(_fileWatchTimerId);
 
     // Cancel any existing retry timer
     _cancelRestorationRetry();
@@ -148,6 +178,7 @@ class _PdfViewerState extends State<PdfViewer> {
     if (_restorationAttempts >= _maxRestorationAttempts) {
       debugPrint('📄 PdfViewer: ❌ Max restoration attempts reached, giving up');
       _cancelRestorationRetry();
+      _resumeFileWatching(); // Resume file watching when giving up
       return;
     }
 
@@ -183,10 +214,11 @@ class _PdfViewerState extends State<PdfViewer> {
     try {
       debugPrint('📄 PdfViewer: ✅ Restoring to page $targetPage (attempt $_restorationAttempts)');
       _controller.goToPage(pageNumber: targetPage);
-      
-      // Success - cancel retry timer
+
+      // Success - cancel retry timer and resume file watching
       _cancelRestorationRetry();
-      
+      _resumeFileWatching();
+
       // Verify restoration worked by checking current page after a brief delay
       Future.delayed(const Duration(milliseconds: 50), () {
         if (mounted && _controller.isReady) {
