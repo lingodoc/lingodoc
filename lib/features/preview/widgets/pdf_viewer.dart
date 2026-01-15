@@ -96,18 +96,46 @@ class _PdfViewerState extends State<PdfViewer> {
 
     // Reload PDF if path changed
     if (widget.pdfPath != oldWidget.pdfPath) {
-      debugPrint('📄 PdfViewer: Path changed from ${oldWidget.pdfPath} to ${widget.pdfPath}');
       _cancelRestorationRetry(); // Cancel any pending retry
+
+      // Check if this is a language change (same document, different language)
+      // In this case, we want to preserve the current page position
+      final isLanguageChange = widget.languageCode != oldWidget.languageCode &&
+          oldWidget.pdfPath != null &&
+          widget.pdfPath != null;
+
+      // Save current page BEFORE clearing state (for language changes)
+      // Always try to save page number if controller is ready
+      if (_controller.isReady) {
+        final currentPage = _controller.pageNumber;
+        if (currentPage != null && (isLanguageChange || currentPage > 1)) {
+          _savedPageNumber = currentPage;
+        }
+      }
+
       setState(() {
         _isLoading = false;
         _errorMessage = null;
         _lastLoadedPath = null;
         _lastFileModTime = null;
-        _savedPageNumber = null; // Clear saved page on path change
 
-        // Update key only when path changes (this preserves scrollbar state during recompiles)
-        if (widget.pdfPath != null) {
+        // Only clear saved page if NOT a language change AND page was 1
+        // Language changes should preserve page position
+        if (!isLanguageChange && _savedPageNumber == 1) {
+          _savedPageNumber = null;
+        }
+
+        // For language changes, keep the same key to avoid full widget rebuild
+        // This preserves the controller state and makes page restoration more reliable
+        // Only create new key for genuinely different documents
+        if (widget.pdfPath != null && !isLanguageChange) {
           _pdfViewerKey = ValueKey(widget.pdfPath);
+        }
+        // For language changes, create a key based on document structure (without language path component)
+        // This allows the PDF to reload but with better state preservation
+        if (widget.pdfPath != null && isLanguageChange) {
+          // Force a new key to load the new PDF, but restore page after
+          _pdfViewerKey = ValueKey('${widget.pdfPath}_${DateTime.now().millisecondsSinceEpoch}');
         }
       });
       _checkPdf();
@@ -151,14 +179,12 @@ class _PdfViewerState extends State<PdfViewer> {
         const Duration(milliseconds: 2000),
         _checkIfFileModified,
       );
-      debugPrint('📄 PdfViewer: Resumed file watching');
     }
   }
 
   /// Attempt to restore the saved page number with retry logic
   Future<void> _attemptPageRestoration() async {
     if (_savedPageNumber == null) {
-      debugPrint('📄 PdfViewer: No saved page to restore');
       return;
     }
 
@@ -168,7 +194,6 @@ class _PdfViewerState extends State<PdfViewer> {
     // Cancel any existing retry timer
     _cancelRestorationRetry();
 
-    debugPrint('📄 PdfViewer: Starting page restoration to page $_savedPageNumber');
     _restorationAttempts = 0;
     _scheduleRestorationAttempt();
   }
@@ -176,7 +201,6 @@ class _PdfViewerState extends State<PdfViewer> {
   /// Schedule a single restoration attempt
   void _scheduleRestorationAttempt() {
     if (_restorationAttempts >= _maxRestorationAttempts) {
-      debugPrint('📄 PdfViewer: ❌ Max restoration attempts reached, giving up');
       _cancelRestorationRetry();
       _resumeFileWatching(); // Resume file watching when giving up
       return;
@@ -203,7 +227,6 @@ class _PdfViewerState extends State<PdfViewer> {
 
     // Check if controller is ready and has a document
     if (!_controller.isReady) {
-      debugPrint('📄 PdfViewer: Controller not ready (attempt $_restorationAttempts/$_maxRestorationAttempts), retrying...');
       _scheduleRestorationAttempt();
       return;
     }
@@ -212,26 +235,12 @@ class _PdfViewerState extends State<PdfViewer> {
     final targetPage = _savedPageNumber!;
 
     try {
-      debugPrint('📄 PdfViewer: ✅ Restoring to page $targetPage (attempt $_restorationAttempts)');
       _controller.goToPage(pageNumber: targetPage);
 
       // Success - cancel retry timer and resume file watching
       _cancelRestorationRetry();
       _resumeFileWatching();
-
-      // Verify restoration worked by checking current page after a brief delay
-      Future.delayed(const Duration(milliseconds: 50), () {
-        if (mounted && _controller.isReady) {
-          final currentPage = _controller.pageNumber;
-          if (currentPage == targetPage) {
-            debugPrint('📄 PdfViewer: ✅ Page restoration verified: $currentPage');
-          } else {
-            debugPrint('📄 PdfViewer: ⚠️  Page restoration mismatch: expected $targetPage, got $currentPage');
-          }
-        }
-      });
     } catch (e) {
-      debugPrint('📄 PdfViewer: ❌ Restoration error (attempt $_restorationAttempts): $e');
       _scheduleRestorationAttempt();
     }
   }
@@ -262,8 +271,6 @@ class _PdfViewerState extends State<PdfViewer> {
       _lastFileModTime = stat.modified;
       _lastLoadedPath = widget.pdfPath;
 
-      debugPrint('📄 PdfViewer: Loaded ${widget.pdfPath} (modified: ${stat.modified})');
-
       setState(() {
         _isLoading = false;
         _errorMessage = null;
@@ -271,7 +278,6 @@ class _PdfViewerState extends State<PdfViewer> {
       
       // Trigger page restoration after PDF loads
       if (_savedPageNumber != null) {
-        debugPrint('📄 PdfViewer: PDF loaded, will restore to page $_savedPageNumber');
         // Use a small initial delay to let the PDF viewer initialize
         Future.delayed(const Duration(milliseconds: 200), () {
           if (mounted) {
@@ -304,15 +310,10 @@ class _PdfViewerState extends State<PdfViewer> {
 
       // If file was modified after last load, reload it
       if (_lastFileModTime == null || stat.modified.isAfter(_lastFileModTime!)) {
-        debugPrint('📄 PdfViewer: File modified! Old: $_lastFileModTime, New: ${stat.modified}');
-
         // Save current page number before reloading
         if (_controller.isReady) {
           final currentPage = _controller.pageNumber;
           _savedPageNumber = currentPage;
-          debugPrint('📄 PdfViewer: 💾 Saved current page: $currentPage');
-        } else {
-          debugPrint('📄 PdfViewer: ⚠️  Controller not ready, cannot save page');
         }
 
         // Update modification time FIRST before reloading
@@ -322,7 +323,7 @@ class _PdfViewerState extends State<PdfViewer> {
         await _checkPdf();
       }
     } catch (e) {
-      debugPrint('📄 PdfViewer: Error checking file modification: $e');
+      // Error checking file modification - ignore silently
     }
   }
 
@@ -503,12 +504,9 @@ class _PdfViewerState extends State<PdfViewer> {
             ),
           ],
           onViewerReady: (document, controller) {
-            if (_savedPageNumber != null) {
-              Future.delayed(const Duration(milliseconds: 100), () {
-                if (mounted && controller.isReady) {
-                  controller.goToPage(pageNumber: _savedPageNumber!);
-                }
-              });
+            if (_savedPageNumber != null && _savedPageNumber! > 1) {
+              // Use the retry-based restoration which is more robust
+              _attemptPageRestoration();
             }
           },
         ),

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as path;
 import '../../typst/services/typst_compiler.dart';
@@ -63,13 +62,11 @@ class AutoRefreshService {
       }
 
       // Check if source files have actually changed before compiling
-      final hasChanges = await _checkForSourceChanges();
-      if (!hasChanges) {
-        debugPrint('⏭️  AutoRefreshService: No source changes detected, skipping compilation');
+      // Returns the latest modification time if changes detected, null otherwise
+      final latestModTime = await _checkForSourceChanges();
+      if (latestModTime == null) {
         return;
       }
-
-      debugPrint('🔄 AutoRefreshService: Source changes detected, triggering compilation');
 
       // Perform compilation
       final result = await compiler.compileForLanguage(
@@ -78,20 +75,25 @@ class AutoRefreshService {
         outputDir: _outputDir,
       );
 
+      // Update last source modification time AFTER successful compilation
+      // This ensures future changes will be detected
+      _lastSourceModTime = latestModTime;
+
       // Notify callback
       _periodicCallback!(result);
     });
   }
 
   /// Check if any source files have been modified since last compilation
-  Future<bool> _checkForSourceChanges() async {
-    if (_projectPath == null) return false;
+  /// Returns the latest modification time if changes detected, null otherwise
+  Future<DateTime?> _checkForSourceChanges() async {
+    if (_projectPath == null) return null;
 
     try {
       // Check main.typ and all .typ files in chapters directory
       final mainTypPath = path.join(_projectPath!, 'main.typ');
       final chaptersDir = path.join(_projectPath!, 'chapters');
-      
+
       DateTime? latestModTime;
 
       // Check main.typ
@@ -124,18 +126,26 @@ class AutoRefreshService {
         }
       }
 
-      // If no previous check or files were modified, mark as changed
-      if (_lastSourceModTime == null || 
-          (latestModTime != null && latestModTime.isAfter(_lastSourceModTime!))) {
-        _lastSourceModTime = latestModTime;
-        return true;
+      // Check lang.typ if it exists (language injection file)
+      final langTypPath = path.join(_projectPath!, 'lang.typ');
+      final langTypFile = File(langTypPath);
+      if (await langTypFile.exists()) {
+        final stat = await langTypFile.stat();
+        if (latestModTime == null || stat.modified.isAfter(latestModTime)) {
+          latestModTime = stat.modified;
+        }
       }
 
-      return false;
+      // If no previous check or files were modified, return the latest mod time
+      if (_lastSourceModTime == null ||
+          (latestModTime != null && latestModTime.isAfter(_lastSourceModTime!))) {
+        return latestModTime;
+      }
+
+      return null;
     } catch (e) {
-      debugPrint('⚠️  AutoRefreshService: Error checking source changes: $e');
-      // On error, assume changes to be safe
-      return true;
+      // On error, return current time to force compilation
+      return DateTime.now();
     }
   }
 
@@ -161,37 +171,6 @@ class AutoRefreshService {
     if (_isEnabled) {
       _startPeriodicTimer();
     }
-  }
-
-  /// Trigger a debounced refresh (kept for backward compatibility)
-  ///
-  /// This is now deprecated in favor of the 10-second periodic timer.
-  /// It will wait for the debounce period before actually compiling.
-  @Deprecated('Use configure() to set up periodic 10-second refresh instead')
-  Future<void> refresh({
-    required String projectPath,
-    required String languageCode,
-    required int debounceMs,
-    String? outputDir,
-    required Function(CompilationResult) onComplete,
-  }) async {
-    // Cancel any existing debounce timer
-    _debounceTimer?.cancel();
-
-    // Start a new debounce timer
-    _debounceTimer = Timer(Duration(milliseconds: debounceMs), () async {
-      if (!_isEnabled) return;
-
-      // Perform compilation
-      final result = await compiler.compileForLanguage(
-        projectPath: projectPath,
-        languageCode: languageCode,
-        outputDir: outputDir,
-      );
-
-      // Notify caller
-      onComplete(result);
-    });
   }
 
   /// Trigger immediate refresh without debouncing
