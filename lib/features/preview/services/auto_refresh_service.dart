@@ -19,6 +19,9 @@ class AutoRefreshService {
   // Current auto-refresh state
   bool _isEnabled = false;
 
+  // Disposal guard to prevent timer callbacks after dispose
+  bool _isDisposed = false;
+
   // Periodic refresh callback
   Function(CompilationResult)? _periodicCallback;
   String? _projectPath;
@@ -57,6 +60,9 @@ class AutoRefreshService {
     }
 
     _periodicTimer = Timer.periodic(const Duration(seconds: 10), (_) async {
+      // Guard against execution after disposal
+      if (_isDisposed) return;
+
       if (!_isEnabled || _projectPath == null || _languageCode == null || _periodicCallback == null) {
         return;
       }
@@ -64,7 +70,9 @@ class AutoRefreshService {
       // Check if source files have actually changed before compiling
       // Returns the latest modification time if changes detected, null otherwise
       final latestModTime = await _checkForSourceChanges();
-      if (latestModTime == null) {
+
+      // Re-check disposal after async operation
+      if (_isDisposed || latestModTime == null) {
         return;
       }
 
@@ -75,12 +83,17 @@ class AutoRefreshService {
         outputDir: _outputDir,
       );
 
+      // Re-check disposal after async compilation
+      if (_isDisposed) return;
+
       // Update last source modification time AFTER successful compilation
       // This ensures future changes will be detected
       _lastSourceModTime = latestModTime;
 
-      // Notify callback
-      _periodicCallback!(result);
+      // Notify callback (with final disposal check)
+      if (!_isDisposed && _periodicCallback != null) {
+        _periodicCallback!(result);
+      }
     });
   }
 
@@ -107,7 +120,11 @@ class AutoRefreshService {
       final chaptersDirectory = Directory(chaptersDir);
       if (await chaptersDirectory.exists()) {
         await for (final entity in chaptersDirectory.list(recursive: false)) {
-          if (entity is File && entity.path.endsWith('.typ')) {
+          // Ignore transient sync-probe temp copies so they don't trigger a
+          // recompile loop.
+          if (entity is File &&
+              entity.path.endsWith('.typ') &&
+              !path.basename(entity.path).startsWith('.ldsync-')) {
             final stat = await entity.stat();
             if (latestModTime == null || stat.modified.isAfter(latestModTime)) {
               latestModTime = stat.modified;
@@ -203,6 +220,7 @@ class AutoRefreshService {
 
   /// Clean up resources
   void dispose() {
+    _isDisposed = true;
     stop();
   }
 }

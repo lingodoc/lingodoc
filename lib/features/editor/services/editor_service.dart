@@ -12,11 +12,21 @@ class EditorState {
   final bool isLoading;
   final String? error;
 
+  /// Text to insert at the current cursor position.
+  /// The editor widget watches this and clears it after inserting.
+  final String? pendingInsertion;
+
+  /// 1-based line number to jump to after a cross-file PDF→editor navigation.
+  /// Consumed and cleared by the newly-mounted HighlightedCodeEditor.
+  final int? pendingLineJump;
+
   const EditorState({
     this.tabs = const [],
     this.activeTabIndex,
     this.isLoading = false,
     this.error,
+    this.pendingInsertion,
+    this.pendingLineJump,
   });
 
   EditorTab? get activeTab =>
@@ -29,12 +39,19 @@ class EditorState {
     int? activeTabIndex,
     bool? isLoading,
     String? error,
+    String? pendingInsertion,
+    bool clearPendingInsertion = false,
+    int? pendingLineJump,
+    bool clearLineJump = false,
   }) {
     return EditorState(
       tabs: tabs ?? this.tabs,
       activeTabIndex: activeTabIndex ?? this.activeTabIndex,
       isLoading: isLoading ?? this.isLoading,
       error: error,
+      pendingInsertion:
+          clearPendingInsertion ? null : (pendingInsertion ?? this.pendingInsertion),
+      pendingLineJump: clearLineJump ? null : (pendingLineJump ?? this.pendingLineJump),
     );
   }
 }
@@ -44,13 +61,19 @@ class EditorNotifier extends Notifier<EditorState> {
   @override
   EditorState build() => const EditorState();
 
-  /// Open a file in a new tab or switch to existing tab
-  Future<void> openFile(String filePath) async {
+  /// Open a file in a new tab or switch to existing tab.
+  ///
+  /// [jumpToLine] is a 1-based line number to scroll to after the file opens;
+  /// used by PDF→editor cross-file navigation.
+  Future<void> openFile(String filePath, {int? jumpToLine}) async {
     // Check if file is already open
     final existingIndex = state.tabs.indexWhere((tab) => tab.filePath == filePath);
     if (existingIndex != -1) {
       // File already open, just switch to it
       setActiveTab(existingIndex);
+      if (jumpToLine != null) {
+        state = state.copyWith(pendingLineJump: jumpToLine);
+      }
       return;
     }
 
@@ -89,6 +112,7 @@ class EditorNotifier extends Notifier<EditorState> {
         tabs: updatedTabs,
         activeTabIndex: updatedTabs.length - 1,
         isLoading: false,
+        pendingLineJump: jumpToLine,
       );
     } catch (e) {
       state = state.copyWith(
@@ -96,6 +120,11 @@ class EditorNotifier extends Notifier<EditorState> {
         error: 'Failed to open file: $e',
       );
     }
+  }
+
+  /// Clear the pending line jump (called by the editor after consuming it).
+  void clearLineJump() {
+    state = state.copyWith(clearLineJump: true);
   }
 
   /// Close a tab
@@ -168,10 +197,7 @@ class EditorNotifier extends Notifier<EditorState> {
 
     try {
       final file = File(tab.filePath);
-      debugPrint('💾 EditorService: Saving file to: ${tab.filePath}');
-      debugPrint('💾 EditorService: File exists: ${await file.exists()}');
       await file.writeAsString(tab.content);
-      debugPrint('💾 EditorService: Save completed successfully');
 
       final updatedTabs = List<EditorTab>.from(state.tabs);
       updatedTabs[index] = tab.copyWith(isDirty: false);
@@ -198,6 +224,17 @@ class EditorNotifier extends Notifier<EditorState> {
   /// Close all tabs
   void closeAll() {
     state = const EditorState();
+  }
+
+  /// Request insertion of [text] at the active editor's cursor position.
+  /// The editor widget picks this up and clears it after inserting.
+  void requestInsertion(String text) {
+    state = state.copyWith(pendingInsertion: text);
+  }
+
+  /// Called by the editor widget after it has consumed the pending insertion.
+  void clearInsertion() {
+    state = state.copyWith(clearPendingInsertion: true);
   }
 }
 

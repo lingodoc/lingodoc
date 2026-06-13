@@ -51,3 +51,6 @@ app.*.map.json
 
 # Sample project (for local testing only)
 /sample-project/
+
+# Local projects (not for version control)
+/projects/

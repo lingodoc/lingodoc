@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:path/path.dart' as path;
 import '../models/suggestion.dart';
@@ -6,6 +7,16 @@ import '../models/suggestion.dart';
 class AutocompleteService {
   final String? projectPath;
   List<Suggestion> _projectTerms = [];
+
+  /// Debounce timer for suggestions
+  Timer? _debounceTimer;
+
+  /// Debounce duration for autocomplete suggestions (milliseconds)
+  static const int _debounceDurationMs = 150;
+
+  /// Cached suggestions to avoid recomputation
+  String? _lastPrefix;
+  List<Suggestion>? _cachedSuggestions;
 
   AutocompleteService({this.projectPath}) {
     if (projectPath != null) {
@@ -360,6 +371,9 @@ class AutocompleteService {
                 detail: 'From terms.typ',
               ))
           .toList();
+
+      // Clear cache when terms are loaded/updated
+      clearCache();
     } catch (e) {
       // Silently fail if terms.typ cannot be parsed
       _projectTerms = [];
@@ -401,9 +415,14 @@ class AutocompleteService {
 
 
 
-  /// Get all suggestions matching the prefix
+  /// Get all suggestions matching the prefix (synchronous, with caching)
   List<Suggestion> getSuggestions(String prefix) {
     if (prefix.isEmpty) return [];
+
+    // Return cached results if prefix matches
+    if (_lastPrefix == prefix && _cachedSuggestions != null) {
+      return _cachedSuggestions!;
+    }
 
     final lowerPrefix = prefix.toLowerCase();
     final allSuggestions = [
@@ -413,9 +432,64 @@ class AutocompleteService {
       ..._projectTerms,
     ];
 
-    return allSuggestions
+    final results = allSuggestions
         .where((s) => s.label.toLowerCase().startsWith(lowerPrefix))
         .toList();
+
+    // Cache results
+    _lastPrefix = prefix;
+    _cachedSuggestions = results;
+
+    return results;
+  }
+
+  /// Get suggestions with debouncing (for real-time typing)
+  ///
+  /// Returns a Future that completes after the debounce period with suggestions.
+  /// If called again before the debounce period expires, the previous call is cancelled.
+  Future<List<Suggestion>> getSuggestionsDebounced(String prefix) {
+    // Cancel any pending debounce timer
+    _debounceTimer?.cancel();
+
+    // Create a completer for this request
+    final completer = Completer<List<Suggestion>>();
+
+    // Empty prefix returns immediately
+    if (prefix.isEmpty) {
+      completer.complete([]);
+      return completer.future;
+    }
+
+    // Return cached results immediately if available
+    if (_lastPrefix == prefix && _cachedSuggestions != null) {
+      completer.complete(_cachedSuggestions!);
+      return completer.future;
+    }
+
+    // Debounce the actual computation
+    _debounceTimer = Timer(
+      Duration(milliseconds: _debounceDurationMs),
+      () {
+        final suggestions = getSuggestions(prefix);
+        if (!completer.isCompleted) {
+          completer.complete(suggestions);
+        }
+      },
+    );
+
+    return completer.future;
+  }
+
+  /// Clear suggestion cache (call when project terms are reloaded)
+  void clearCache() {
+    _lastPrefix = null;
+    _cachedSuggestions = null;
+  }
+
+  /// Dispose resources
+  void dispose() {
+    _debounceTimer?.cancel();
+    _debounceTimer = null;
   }
 
   /// Get context-aware suggestions based on cursor position
@@ -453,10 +527,5 @@ class AutocompleteService {
     // Find last word boundary (space, newline, or start)
     final match = RegExp(r'([#*_`=\-+/a-zA-Z0-9_-]*)$').firstMatch(text);
     return match?.group(1) ?? '';
-  }
-
-  /// Reload project terms (call when terms.typ changes)
-  Future<void> reloadProjectTerms() async {
-    await _loadProjectTerms();
   }
 }

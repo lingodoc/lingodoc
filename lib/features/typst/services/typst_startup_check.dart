@@ -28,9 +28,16 @@ class TypstStatus {
 }
 
 /// Provider for TypstInstaller service
+///
+/// Set [allowUnverifiedInstall] to false in production for maximum security.
+/// When false, installation will fail if checksums are not configured.
 final typstInstallerProvider = Provider<TypstInstaller>((ref) {
   final pathResolver = ref.watch(typstPathResolverProvider);
-  return TypstInstaller(pathResolver);
+  return TypstInstaller(
+    pathResolver,
+    // TODO: Set to false in production builds
+    allowUnverifiedInstall: true,
+  );
 });
 
 /// Provider for Typst installation status (Riverpod 3.x)

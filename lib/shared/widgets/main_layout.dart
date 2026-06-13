@@ -12,11 +12,33 @@ import '../../features/editor/widgets/editor_tabs.dart';
 import '../../features/editor/services/editor_service.dart';
 import '../../features/preview/widgets/preview_panel.dart';
 import '../../features/preview/services/detachable_window_service.dart';
+import '../../features/preview/services/auto_refresh_service.dart';
 import '../../features/editor/services/search_provider.dart';
+import '../../features/settings/widgets/settings_dialog.dart';
+import '../../features/screens/widgets/screen_picker_dialog.dart';
+
+/// Whether the live PDF preview panel is shown. Turning it off removes the
+/// preview from the layout and stops the auto-refresh compile loop — useful for
+/// very large chapters where the constant recompile/render is too heavy.
+class PreviewEnabledNotifier extends Notifier<bool> {
+  @override
+  bool build() => true;
+
+  void set(bool value) => state = value;
+  void toggle() => state = !state;
+}
+
+final previewEnabledProvider =
+    NotifierProvider<PreviewEnabledNotifier, bool>(PreviewEnabledNotifier.new);
 
 /// Intent for save action
 class SaveIntent extends Intent {
   const SaveIntent();
+}
+
+/// Intent for opening the screen picker
+class InsertScreenIntent extends Intent {
+  const InsertScreenIntent();
 }
 
 /// Main application layout with 3-panel split view:
@@ -32,7 +54,7 @@ class MainLayout extends ConsumerStatefulWidget {
 
 class _MainLayoutState extends ConsumerState<MainLayout> {
   late SplitViewController _splitController;
-  bool _lastDetachedState = false;
+  bool _lastHidePreview = false;
 
   @override
   void initState() {
@@ -82,25 +104,28 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
         }
       }
     } catch (e) {
-      debugPrint('Failed to auto-load sample project: $e');
+      // Failed to auto-load sample project - ignore silently
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Watch detachable window state to hide preview when detached
+    // Hide the preview panel when it is detached to its own window or the user
+    // has switched it off manually.
     final isPreviewDetached = ref.watch(
       detachableWindowProvider.select((state) => state.isDetached),
     );
+    final previewEnabled = ref.watch(previewEnabledProvider);
+    final hidePreview = isPreviewDetached || !previewEnabled;
 
-    // Update controller when detached state changes
-    if (isPreviewDetached != _lastDetachedState) {
-      _lastDetachedState = isPreviewDetached;
-      
+    // Update controller when the visible panel count changes
+    if (hidePreview != _lastHidePreview) {
+      _lastHidePreview = hidePreview;
+
       // Dispose old controller and create new one with correct panel count
       _splitController.dispose();
-      
-      if (isPreviewDetached) {
+
+      if (hidePreview) {
         // 2-panel layout: recalculate weights to maintain proportions
         // When going from 3 panels to 2, redistribute the preview space to editor
         _splitController = SplitViewController(
@@ -127,6 +152,11 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
       shortcuts: <LogicalKeySet, Intent>{
         LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyS):
             const SaveIntent(),
+        LogicalKeySet(
+          LogicalKeyboardKey.control,
+          LogicalKeyboardKey.shift,
+          LogicalKeyboardKey.keyS,
+        ): const InsertScreenIntent(),
       },
       child: Actions(
         actions: <Type, Action<Intent>>{
@@ -136,11 +166,17 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
               return null;
             },
           ),
+          InsertScreenIntent: CallbackAction<InsertScreenIntent>(
+            onInvoke: (_) {
+              _showScreenPicker(context);
+              return null;
+            },
+          ),
         },
         child: Scaffold(
           appBar: _buildMenuBar(context),
           body: SplitView(
-        key: ValueKey('split-view-${isPreviewDetached ? "2-panel" : "3-panel"}'),
+        key: ValueKey('split-view-${hidePreview ? "2-panel" : "3-panel"}'),
         viewMode: SplitViewMode.Horizontal,
         indicator: const SplitIndicator(
           viewMode: SplitViewMode.Horizontal,
@@ -152,7 +188,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           isActive: true,
         ),
         controller: _splitController,
-        children: isPreviewDetached
+        children: hidePreview
             ? [
                 // 2-panel layout: Tree + Editor only
                 _buildProjectPanel(),
@@ -172,6 +208,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
 
   /// Menu bar with File, Edit, View, Help menus
   PreferredSizeWidget _buildMenuBar(BuildContext context) {
+    final previewEnabled = ref.watch(previewEnabledProvider);
     return PreferredSize(
       preferredSize: const Size.fromHeight(40),
       child: Container(
@@ -251,6 +288,24 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                   shortcut: 'Ctrl+H',
                   onTap: () {}, // TODO: Step 12
                 ),
+                const _MenuDivider(),
+                _MenuItem(
+                  label: 'Settings...',
+                  icon: Icons.settings,
+                  shortcut: 'Ctrl+,',
+                  onTap: () => _showSettingsDialog(context),
+                ),
+              ],
+            ),
+            _MenuBarItem(
+              label: 'Insert',
+              items: [
+                _MenuItem(
+                  label: 'Screen…',
+                  icon: Icons.screenshot_monitor,
+                  shortcut: 'Ctrl+Shift+S',
+                  onTap: () => _showScreenPicker(context),
+                ),
               ],
             ),
             _MenuBarItem(
@@ -291,6 +346,30 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                   onTap: () => _showAboutDialog(context),
                 ),
               ],
+            ),
+            const Spacer(),
+            // Manual preview on/off — switch the live preview off to make the
+            // editor responsive on very large chapters.
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: IconButton(
+                icon: Icon(
+                  previewEnabled ? Icons.visibility : Icons.visibility_off,
+                  size: 18,
+                ),
+                tooltip: previewEnabled
+                    ? 'Hide preview (stops auto-compile)'
+                    : 'Show preview',
+                onPressed: () {
+                  final next = !previewEnabled;
+                  ref.read(previewEnabledProvider.notifier).set(next);
+                  if (!next) {
+                    // Stop the compile loop immediately; the panel also stops it
+                    // on dispose, but do it eagerly so nothing recompiles.
+                    ref.read(autoRefreshServiceProvider).stop();
+                  }
+                },
+              ),
             ),
           ],
         ),
@@ -410,7 +489,6 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
 
     if (activeIndex != null) {
       await ref.read(editorProvider.notifier).saveTab(activeIndex);
-      debugPrint('✅ Saved active tab');
     }
   }
 
@@ -431,6 +509,20 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           'multilingual technical documentation using Typst.',
         ),
       ],
+    );
+  }
+
+  void _showSettingsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const SettingsDialog(),
+    );
+  }
+
+  void _showScreenPicker(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const ScreenPickerDialog(),
     );
   }
 }

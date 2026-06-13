@@ -28,7 +28,7 @@ void detachedPreviewWindowMain(List<String> args) {
       pdfPath = params['pdfPath'] as String?;
       isGridMode = params['isGridMode'] as bool? ?? false;
     } catch (e) {
-      debugPrint('Failed to parse window arguments: $e');
+      // Failed to parse window arguments - use defaults
     }
   }
 
@@ -149,9 +149,8 @@ class _DetachedPreviewWindowRootState
         0, // Main window ID
         'reattach_preview',
       );
-      debugPrint('Sent reattach_preview message to main window');
     } catch (e) {
-      debugPrint('Failed to notify main window: $e');
+      // Failed to notify main window - ignore
     }
   }
 

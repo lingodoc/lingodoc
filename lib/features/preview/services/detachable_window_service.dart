@@ -134,7 +134,6 @@ class DetachableWindowService {
       // Note: Window close events will be handled by the window itself
       // through the DetachedPreviewWindow widget
     } catch (e) {
-      debugPrint('Failed to create detached window: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -153,7 +152,7 @@ class DetachableWindowService {
         await DesktopMultiWindow.invokeMethod(_detachedWindowId!, 'close');
         _detachedWindowId = null;
       } catch (e) {
-        debugPrint('Failed to close detached window: $e');
+        // Failed to close detached window - ignore
       }
     }
   }

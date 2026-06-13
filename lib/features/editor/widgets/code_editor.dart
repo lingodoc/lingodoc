@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/editor_service.dart';
 
 /// Basic code editor widget with plain text editing
-class CodeEditor extends StatefulWidget {
+class CodeEditor extends ConsumerStatefulWidget {
   final String initialContent;
   final ValueChanged<String>? onChanged;
   final bool readOnly;
@@ -17,10 +19,10 @@ class CodeEditor extends StatefulWidget {
   });
 
   @override
-  State<CodeEditor> createState() => _CodeEditorState();
+  ConsumerState<CodeEditor> createState() => _CodeEditorState();
 }
 
-class _CodeEditorState extends State<CodeEditor> {
+class _CodeEditorState extends ConsumerState<CodeEditor> {
   late TextEditingController _controller;
   late FocusNode _focusNode;
   bool _isDirty = false;
@@ -60,8 +62,31 @@ class _CodeEditorState extends State<CodeEditor> {
     widget.onChanged?.call(_controller.text);
   }
 
+  void _insertAtCursor(String text) {
+    final sel = _controller.selection;
+    final current = _controller.text;
+    final start = sel.isValid ? sel.start : current.length;
+    final end = sel.isValid ? sel.end : current.length;
+    _controller.value = _controller.value.copyWith(
+      text: current.replaceRange(start, end, text),
+      selection: TextSelection.collapsed(offset: start + text.length),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.listen<String?>(
+      editorProvider.select((s) => s.pendingInsertion),
+      (_, next) {
+        if (next != null) {
+          _insertAtCursor(next);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ref.read(editorProvider.notifier).clearInsertion();
+          });
+        }
+      },
+    );
+
     return Container(
       color: Theme.of(context).colorScheme.surface,
       child: Column(
@@ -227,17 +252,15 @@ class _CodeEditorState extends State<CodeEditor> {
 
   void _handleSave() {
     // TODO: Implement actual save functionality
-    debugPrint('Save file: ${widget.filePath}');
     setState(() => _isDirty = false);
   }
 
   void _handleUndo() {
     // Note: TextField has built-in undo/redo on some platforms
-    debugPrint('Undo');
   }
 
   void _handleRedo() {
-    debugPrint('Redo');
+    // TODO: Implement redo functionality
   }
 }
 

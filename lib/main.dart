@@ -70,7 +70,6 @@ Timer? _heartbeatMonitor;
 Future<dynamic> _handleMethodCall(MethodCall call, int fromWindowId) async {
   if (call.method == 'reattach_preview') {
     // Handle reattach request from detached window
-    debugPrint('Received reattach_preview message from window $fromWindowId');
 
     // Reattach preview in main window
     if (_globalContainer != null) {
@@ -110,7 +109,7 @@ void _startHeartbeatMonitoring() {
 
       // If no heartbeat for 5 seconds, assume window closed
       if (elapsed.inSeconds > 5) {
-        debugPrint('Detached window heartbeat timeout - reattaching preview');
+        // Detached window heartbeat timeout - reattaching preview
 
         // Reattach preview
         if (_globalContainer != null) {

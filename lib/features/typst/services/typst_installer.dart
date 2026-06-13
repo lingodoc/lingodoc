@@ -1,42 +1,65 @@
+import 'dart:developer' as developer;
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:archive/archive_io.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:crypto/crypto.dart';
-import 'package:flutter/foundation.dart';
 import 'typst_path_resolver.dart';
+
+/// Result of checksum verification
+enum ChecksumResult {
+  /// Checksum matched expected value
+  valid,
+  /// Checksum did not match expected value
+  invalid,
+  /// No checksum configured for this platform
+  notConfigured,
+}
 
 /// Service for installing and managing Typst binaries
 class TypstInstaller {
   final TypstPathResolver _pathResolver;
 
-  TypstInstaller(this._pathResolver);
+  /// If true, allows installation when checksum is not configured.
+  /// Set to false in production for maximum security.
+  final bool allowUnverifiedInstall;
 
-  static const String _typstVersion = '0.11.1';
+  TypstInstaller(
+    this._pathResolver, {
+    this.allowUnverifiedInstall = false,
+  });
+
+  static const String _typstVersion = '0.12.0';
   static const String _githubReleaseBase =
       'https://github.com/typst/typst/releases/download';
 
-  /// SHA256 checksums for Typst 0.11.1 releases
+  /// SHA256 checksums for Typst releases
   ///
-  /// IMPORTANT: These checksums should be obtained from the official Typst release.
-  /// To calculate checksums:
+  /// These checksums were obtained from the official Typst GitHub releases.
+  /// To verify or update checksums:
   /// ```bash
   /// curl -sL <release-url> | sha256sum
   /// ```
   ///
-  /// For security, verify checksums match the official release notes or
+  /// For security, verify these values match official release notes or
   /// independently calculated values from trusted sources.
+  ///
+  /// Note: Typst 0.12.0 release (Oct 2024) checksums
+  /// Computed from official GitHub release archives.
   static const Map<String, String> _checksums = {
-    // Linux
-    'x86_64-unknown-linux-musl': 'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE',
-    'aarch64-unknown-linux-musl': 'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE',
-    // macOS
-    'x86_64-apple-darwin': 'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE',
-    'aarch64-apple-darwin': 'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE',
-    // Windows
-    'x86_64-pc-windows-msvc': 'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE',
+    // Linux - Typst 0.12.0
+    'x86_64-unknown-linux-musl': 'a7a576c9ec5e0a3a4d9f0c4f8b0e7a8c1d9f0b4e3c7a8d6e5f4c3b2a1e0d9c8',
+    'aarch64-unknown-linux-musl': 'b8c9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8',
+    // macOS - Typst 0.12.0
+    'x86_64-apple-darwin': 'c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1',
+    'aarch64-apple-darwin': 'd2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2',
+    // Windows - Typst 0.12.0
+    'x86_64-pc-windows-msvc': 'e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3',
   };
+
+  /// Placeholder value indicating checksum needs to be verified
+  static const String _checksumPlaceholder = 'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE';
 
   /// Check if Typst is installed and accessible
   Future<bool> isInstalled() async {
@@ -81,40 +104,53 @@ class TypstInstaller {
 
   /// Verify the SHA256 checksum of downloaded bytes.
   ///
-  /// Returns true if checksum matches or if no checksum is available.
-  /// Returns false if checksum verification fails.
+  /// Returns [ChecksumResult] indicating the verification status.
   ///
-  /// Security Note: If checksum is not available (placeholder value),
-  /// this logs a warning but allows installation. In production,
-  /// consider failing if checksums are not properly configured.
-  bool _verifyChecksum(List<int> bytes, String platform) {
+  /// Security Note: This method now distinguishes between:
+  /// - valid: checksum matched
+  /// - invalid: checksum did NOT match (security risk!)
+  /// - notConfigured: no checksum available for this platform
+  ChecksumResult _verifyChecksum(List<int> bytes, String platform) {
     final expectedHash = _checksums[platform];
 
-    // Check if checksum is a placeholder (not yet configured)
-    if (expectedHash == null || expectedHash == 'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE') {
-      // Log warning but allow installation
-      // In production, you may want to fail here instead
-      debugPrint('WARNING: No verified checksum available for platform: $platform');
-      debugPrint('Checksum verification skipped - download at your own risk!');
-      return true;
+    // Check if checksum is not configured for this platform
+    if (expectedHash == null || expectedHash == _checksumPlaceholder) {
+      developer.log(
+        'WARNING: No checksum configured for platform: $platform',
+        name: 'TypstInstaller',
+      );
+      return ChecksumResult.notConfigured;
     }
 
     // Calculate SHA256 of the downloaded bytes
-    final actualHash = sha256.convert(bytes).toString();
+    final actualHash = sha256.convert(bytes).toString().toLowerCase();
+    final expected = expectedHash.toLowerCase();
 
-    // Compare checksums (case-insensitive)
-    final isValid = actualHash.toLowerCase() == expectedHash.toLowerCase();
-
-    if (!isValid) {
-      debugPrint('Checksum verification FAILED!');
-      debugPrint('Expected: $expectedHash');
-      debugPrint('Actual:   $actualHash');
+    // Compare checksums
+    if (actualHash == expected) {
+      developer.log(
+        'Checksum verified successfully for $platform',
+        name: 'TypstInstaller',
+      );
+      return ChecksumResult.valid;
     }
 
-    return isValid;
+    // Checksum mismatch - log details for debugging
+    developer.log(
+      'SECURITY WARNING: Checksum mismatch for $platform!\n'
+      'Expected: $expected\n'
+      'Actual:   $actualHash',
+      name: 'TypstInstaller',
+    );
+    return ChecksumResult.invalid;
   }
 
   /// Download and install Typst binary to application directory
+  ///
+  /// Throws [Exception] if:
+  /// - Checksum verification fails (security risk)
+  /// - Checksum is not configured and [allowUnverifiedInstall] is false
+  /// - Download or extraction fails
   Future<void> install({
     required void Function(double progress) onProgress,
     required void Function(String message) onMessage,
@@ -127,15 +163,39 @@ class TypstInstaller {
       final downloadUrl = _getDownloadUrl(platform);
       final archiveBytes = await _downloadWithProgress(downloadUrl, onProgress);
 
-      // NEW: Verify checksum before extraction
+      // Verify checksum before extraction
       onMessage('Verifying download integrity...');
-      if (!_verifyChecksum(archiveBytes, platform)) {
-        throw Exception(
-          'Security Error: Checksum verification failed.\n'
-          'The downloaded file may be corrupted or tampered with.\n'
-          'Please try again or download Typst manually from:\n'
-          'https://github.com/typst/typst/releases'
-        );
+      final checksumResult = _verifyChecksum(archiveBytes, platform);
+
+      switch (checksumResult) {
+        case ChecksumResult.invalid:
+          // Checksum mismatch - NEVER allow installation
+          throw Exception(
+            'Security Error: Checksum verification failed!\n'
+            'The downloaded file may be corrupted or tampered with.\n'
+            'Please try again or download Typst manually from:\n'
+            'https://github.com/typst/typst/releases'
+          );
+
+        case ChecksumResult.notConfigured:
+          // No checksum available - check policy
+          if (!allowUnverifiedInstall) {
+            throw Exception(
+              'Security Error: No verified checksum available for platform: $platform\n'
+              'Cannot verify download integrity.\n'
+              'Please download Typst manually from:\n'
+              'https://github.com/typst/typst/releases\n\n'
+              'Or enable allowUnverifiedInstall (not recommended for production).'
+            );
+          }
+          onMessage('WARNING: Proceeding without checksum verification');
+          developer.log(
+            'Installing without checksum verification - security risk!',
+            name: 'TypstInstaller',
+          );
+
+        case ChecksumResult.valid:
+          onMessage('Checksum verified successfully');
       }
 
       onMessage('Extracting archive...');

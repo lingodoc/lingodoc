@@ -1,5 +1,23 @@
 # LingoDoc - Project Guide
 
+## Quick Start for AI Agents
+
+> **IMPORTANT**: Read [`PROJECT_INDEX.md`](./PROJECT_INDEX.md) FIRST before exploring source files.
+>
+> **Token Savings**: ~94% reduction (3K vs 58K tokens for full codebase scan)
+
+The index contains everything needed for most tasks:
+- Complete project structure with file purposes
+- All core modules, providers, and models
+- Configuration schema and patterns
+- Implementation status and known issues
+- Key providers and data models reference
+
+**When to read source files directly**:
+- Implementing new features in specific modules
+- Debugging issues in particular services
+- Understanding detailed implementation logic
+
 ## Overview
 LingoDoc is a desktop application for authoring multilingual technical documentation using Typst markup language. Built with Flutter for cross-platform desktop support (Linux, macOS, Windows).
 
@@ -244,6 +262,48 @@ flutter test
 # Analyze code
 flutter analyze
 \`\`\`
+
+## AI Agent Workflow
+
+### Recommended Reading Order
+1. **First**: [`PROJECT_INDEX.md`](./PROJECT_INDEX.md) - Complete codebase overview (~3K tokens)
+2. **If needed**: Specific source files based on task requirements
+3. **Reference**: This file for setup, architecture decisions, platform notes
+
+### What's in PROJECT_INDEX.md
+- Complete project structure with 50+ files mapped
+- All Freezed models with field documentation
+- All Riverpod providers with types and purposes
+- Implementation status (16-step roadmap)
+- Known issues with file locations
+- Configuration schema reference
+
+### File Location Quick Reference
+| Task | Primary Files |
+|------|---------------|
+| Config/TOML parsing | `lib/features/project/services/config_service.dart` |
+| Editor functionality | `lib/features/editor/services/editor_service.dart` |
+| PDF compilation | `lib/features/typst/services/typst_compiler.dart` |
+| UI layout | `lib/shared/widgets/main_layout.dart` |
+| State providers | `lib/shared/providers/app_providers.dart` |
+| Syntax highlighting | `lib/features/editor/services/typst_syntax_highlighter.dart` |
+| Search/replace | `lib/features/editor/services/search_provider.dart` |
+| PDF viewer | `lib/features/preview/widgets/pdf_viewer.dart` |
+| Project scaffolding | `lib/features/project/services/project_scaffolding_service.dart` |
+
+### Common Operations
+```bash
+# After code changes to Freezed models
+flutter pub run build_runner build --delete-conflicting-outputs
+
+# Run tests before committing
+flutter test && flutter analyze
+
+# Platform-specific run
+flutter run -d linux   # Linux
+flutter run -d macos   # macOS
+flutter run -d windows # Windows
+```
 
 ## Resources
 

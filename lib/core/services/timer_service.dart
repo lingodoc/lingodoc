@@ -73,10 +73,6 @@ class TimerService {
     });
 
     _intervals[id] = interval;
-
-    if (kDebugMode) {
-      print('[TimerService] Registered timer "$id" with interval ${interval.inMilliseconds}ms');
-    }
   }
 
   /// Cancel a specific timer by ID
@@ -89,9 +85,6 @@ class TimerService {
 
     if (timer != null) {
       timer.cancel();
-      if (kDebugMode) {
-        print('[TimerService] Cancelled timer "$id"');
-      }
       return true;
     }
 
@@ -102,8 +95,6 @@ class TimerService {
   ///
   /// This is useful during app shutdown or when resetting state.
   void cancelAll() {
-    final count = _timers.length;
-
     for (final timer in _timers.values) {
       timer.cancel();
     }
@@ -111,10 +102,6 @@ class TimerService {
     _timers.clear();
     _intervals.clear();
     _lastExecution.clear();
-
-    if (kDebugMode) {
-      print('[TimerService] Cancelled all $count timers');
-    }
   }
 
   /// Check if a timer with the given ID is registered
@@ -168,9 +155,6 @@ class TimerService {
     final timer = _timers[id];
     if (timer != null && timer.isActive) {
       timer.cancel();
-      if (kDebugMode) {
-        print('[TimerService] Paused timer "$id"');
-      }
       return true;
     }
     return false;

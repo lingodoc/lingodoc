@@ -13,6 +13,13 @@ export '../../features/preview/services/preview_provider.dart';
 export '../../features/project/services/config_provider.dart';
 export '../../features/project/services/project_state.dart';
 
+// Settings providers
+export '../../features/settings/services/settings_service.dart';
+export '../../features/settings/models/user_preferences.dart';
+
 // Typst providers
 export '../../features/typst/services/typst_path_resolver.dart';
 export '../../features/typst/services/typst_startup_check.dart';
+
+// Screen library providers
+export '../../features/screens/services/screen_library_service.dart';

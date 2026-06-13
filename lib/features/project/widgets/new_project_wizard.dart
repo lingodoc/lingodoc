@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as p;
 import '../models/models.dart';
 import '../services/project_scaffolding_service.dart';
 
@@ -41,7 +42,7 @@ class _NewProjectWizardState extends State<NewProjectWizard> {
     LanguageConfig(code: 'ko', name: 'Korean'),
     LanguageConfig(code: 'ar', name: 'Arabic'),
     LanguageConfig(code: 'ru', name: 'Russian'),
-    LanguageConfig(code: 'hi', name: 'Hindi'),
+    LanguageConfig(code: 'nl', name: 'Dutch'),
   ];
 
   @override
@@ -111,8 +112,8 @@ class _NewProjectWizardState extends State<NewProjectWizard> {
             const SizedBox(height: 16),
             TextFormField(
               decoration: InputDecoration(
-                labelText: 'Project Path',
-                hintText: '/path/to/project',
+                labelText: 'Create project in',
+                hintText: 'Choose parent folder…',
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.folder_open),
                   onPressed: _selectProjectPath,
@@ -122,11 +123,20 @@ class _NewProjectWizardState extends State<NewProjectWizard> {
               controller: _projectPathController,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please select a project path';
+                  return 'Please choose a parent folder';
                 }
                 return null;
               },
             ),
+            if (_projectPath.isNotEmpty && _projectName.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Project folder: ${p.join(_projectPath, _projectName)}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ],
           ],
         ),
       ),
@@ -322,7 +332,12 @@ class _NewProjectWizardState extends State<NewProjectWizard> {
                   ),
                   const SizedBox(height: 12),
                   _buildSummaryRow('Name:', _projectName.isEmpty ? '-' : _projectName),
-                  _buildSummaryRow('Path:', _projectPath.isEmpty ? '-' : _projectPath),
+                  _buildSummaryRow(
+                    'Folder:',
+                    (_projectPath.isEmpty || _projectName.isEmpty)
+                        ? '-'
+                        : p.join(_projectPath, _projectName),
+                  ),
                   _buildSummaryRow(
                     'Languages:',
                     _selectedLanguages.isEmpty
@@ -523,9 +538,12 @@ class _NewProjectWizardState extends State<NewProjectWizard> {
         ),
       );
 
+      // The project lives in a subdirectory named after the project.
+      final projectDir = p.join(_projectPath, _projectName);
+
       // Create the project
       await _scaffoldingService.createNewProject(
-        projectPath: _projectPath,
+        projectPath: projectDir,
         projectName: _projectName,
         languages: _selectedLanguages,
         languageOrder: _selectedLanguages.map((l) => l.code).toList(),
@@ -538,8 +556,8 @@ class _NewProjectWizardState extends State<NewProjectWizard> {
       // Close loading dialog
       Navigator.of(context).pop();
 
-      // Close wizard and return project path
-      Navigator.of(context).pop(_projectPath);
+      // Close wizard and return the actual project directory
+      Navigator.of(context).pop(projectDir);
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(

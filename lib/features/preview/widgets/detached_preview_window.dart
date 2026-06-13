@@ -28,17 +28,16 @@ class _DetachedPreviewWindowState extends ConsumerState<DetachedPreviewWindow> {
   }
 
   /// Configure auto-refresh with 10-second periodic timer
-  void _configureAutoRefresh() {
-    final projectConfigAsync = ref.read(projectConfigProvider);
+  ///
+  /// [config] - The already-loaded project configuration (required to avoid
+  /// re-reading the FutureProvider which may not have resolved yet)
+  void _configureAutoRefresh(ProjectConfig config) {
     final projectState = ref.read(projectTreeProvider);
     final projectPath = projectState.projectPath;
     final windowState = ref.read(detachableWindowProvider);
     final selectedLanguage = windowState.selectedLanguage;
 
     if (projectPath == null || selectedLanguage == null) return;
-
-    final config = projectConfigAsync.value;
-    if (config == null) return;
 
     final autoRefreshService = ref.read(autoRefreshServiceProvider);
 
@@ -64,11 +63,7 @@ class _DetachedPreviewWindowState extends ConsumerState<DetachedPreviewWindow> {
       },
       error: (message, languageCode, stderr, exitCode) {
         ref.read(autoRefreshProvider.notifier).setError(message);
-        // Show subtle error indicator without intrusive snackbar
-        debugPrint('Auto-refresh compilation failed: $message');
-        if (stderr != null && stderr.isNotEmpty) {
-          debugPrint('Typst compiler error:\n$stderr');
-        }
+        // Auto-refresh compilation failed - error shown in UI indicator
       },
     );
   }
@@ -159,7 +154,7 @@ class _DetachedPreviewWindowState extends ConsumerState<DetachedPreviewWindow> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (shouldBeEnabled) {
           ref.read(autoRefreshProvider.notifier).enable();
-          _configureAutoRefresh();
+          _configureAutoRefresh(config);
           autoRefreshService.start();
         } else {
           ref.read(autoRefreshProvider.notifier).disable();
@@ -169,7 +164,7 @@ class _DetachedPreviewWindowState extends ConsumerState<DetachedPreviewWindow> {
     } else if (shouldBeEnabled) {
       // Auto-refresh is already enabled, just reconfigure if settings changed
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _configureAutoRefresh();
+        _configureAutoRefresh(config);
       });
     }
 
@@ -243,7 +238,7 @@ class _DetachedPreviewWindowState extends ConsumerState<DetachedPreviewWindow> {
                 ref.read(detachableWindowProvider.notifier).setLanguage(value);
                 _compileForLanguage(value);
                 // Reconfigure auto-refresh for new language
-                _configureAutoRefresh();
+                _configureAutoRefresh(config);
               }
             },
           ),
@@ -274,7 +269,7 @@ class _DetachedPreviewWindowState extends ConsumerState<DetachedPreviewWindow> {
                       } else {
                         // Enable auto-refresh
                         ref.read(autoRefreshProvider.notifier).enable();
-                        _configureAutoRefresh();
+                        _configureAutoRefresh(config);
                         service.start();
                       }
                     },
