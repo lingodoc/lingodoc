@@ -19,7 +19,8 @@ mixin _$UserPreferences {
 @ThemeModeConverter() ThemeMode get themeMode; int get autoRefreshIntervalSeconds; bool get enableAutoRefresh; bool get rememberWindowState;// Editor preferences (override project config)
  int get editorFontSize; bool get editorLineNumbers; bool get editorWordWrap;// Preview preferences
  bool get retainPdfPage;// Screen library
- String? get screenLibraryPath;
+ String? get screenLibraryPath;// Session restore
+ String? get lastProjectPath;
 /// Create a copy of UserPreferences
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -32,16 +33,16 @@ $UserPreferencesCopyWith<UserPreferences> get copyWith => _$UserPreferencesCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserPreferences&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.autoRefreshIntervalSeconds, autoRefreshIntervalSeconds) || other.autoRefreshIntervalSeconds == autoRefreshIntervalSeconds)&&(identical(other.enableAutoRefresh, enableAutoRefresh) || other.enableAutoRefresh == enableAutoRefresh)&&(identical(other.rememberWindowState, rememberWindowState) || other.rememberWindowState == rememberWindowState)&&(identical(other.editorFontSize, editorFontSize) || other.editorFontSize == editorFontSize)&&(identical(other.editorLineNumbers, editorLineNumbers) || other.editorLineNumbers == editorLineNumbers)&&(identical(other.editorWordWrap, editorWordWrap) || other.editorWordWrap == editorWordWrap)&&(identical(other.retainPdfPage, retainPdfPage) || other.retainPdfPage == retainPdfPage)&&(identical(other.screenLibraryPath, screenLibraryPath) || other.screenLibraryPath == screenLibraryPath));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserPreferences&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.autoRefreshIntervalSeconds, autoRefreshIntervalSeconds) || other.autoRefreshIntervalSeconds == autoRefreshIntervalSeconds)&&(identical(other.enableAutoRefresh, enableAutoRefresh) || other.enableAutoRefresh == enableAutoRefresh)&&(identical(other.rememberWindowState, rememberWindowState) || other.rememberWindowState == rememberWindowState)&&(identical(other.editorFontSize, editorFontSize) || other.editorFontSize == editorFontSize)&&(identical(other.editorLineNumbers, editorLineNumbers) || other.editorLineNumbers == editorLineNumbers)&&(identical(other.editorWordWrap, editorWordWrap) || other.editorWordWrap == editorWordWrap)&&(identical(other.retainPdfPage, retainPdfPage) || other.retainPdfPage == retainPdfPage)&&(identical(other.screenLibraryPath, screenLibraryPath) || other.screenLibraryPath == screenLibraryPath)&&(identical(other.lastProjectPath, lastProjectPath) || other.lastProjectPath == lastProjectPath));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,themeMode,autoRefreshIntervalSeconds,enableAutoRefresh,rememberWindowState,editorFontSize,editorLineNumbers,editorWordWrap,retainPdfPage,screenLibraryPath);
+int get hashCode => Object.hash(runtimeType,themeMode,autoRefreshIntervalSeconds,enableAutoRefresh,rememberWindowState,editorFontSize,editorLineNumbers,editorWordWrap,retainPdfPage,screenLibraryPath,lastProjectPath);
 
 @override
 String toString() {
-  return 'UserPreferences(themeMode: $themeMode, autoRefreshIntervalSeconds: $autoRefreshIntervalSeconds, enableAutoRefresh: $enableAutoRefresh, rememberWindowState: $rememberWindowState, editorFontSize: $editorFontSize, editorLineNumbers: $editorLineNumbers, editorWordWrap: $editorWordWrap, retainPdfPage: $retainPdfPage, screenLibraryPath: $screenLibraryPath)';
+  return 'UserPreferences(themeMode: $themeMode, autoRefreshIntervalSeconds: $autoRefreshIntervalSeconds, enableAutoRefresh: $enableAutoRefresh, rememberWindowState: $rememberWindowState, editorFontSize: $editorFontSize, editorLineNumbers: $editorLineNumbers, editorWordWrap: $editorWordWrap, retainPdfPage: $retainPdfPage, screenLibraryPath: $screenLibraryPath, lastProjectPath: $lastProjectPath)';
 }
 
 
@@ -52,7 +53,7 @@ abstract mixin class $UserPreferencesCopyWith<$Res>  {
   factory $UserPreferencesCopyWith(UserPreferences value, $Res Function(UserPreferences) _then) = _$UserPreferencesCopyWithImpl;
 @useResult
 $Res call({
-@ThemeModeConverter() ThemeMode themeMode, int autoRefreshIntervalSeconds, bool enableAutoRefresh, bool rememberWindowState, int editorFontSize, bool editorLineNumbers, bool editorWordWrap, bool retainPdfPage, String? screenLibraryPath
+@ThemeModeConverter() ThemeMode themeMode, int autoRefreshIntervalSeconds, bool enableAutoRefresh, bool rememberWindowState, int editorFontSize, bool editorLineNumbers, bool editorWordWrap, bool retainPdfPage, String? screenLibraryPath, String? lastProjectPath
 });
 
 
@@ -69,7 +70,7 @@ class _$UserPreferencesCopyWithImpl<$Res>
 
 /// Create a copy of UserPreferences
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? themeMode = null,Object? autoRefreshIntervalSeconds = null,Object? enableAutoRefresh = null,Object? rememberWindowState = null,Object? editorFontSize = null,Object? editorLineNumbers = null,Object? editorWordWrap = null,Object? retainPdfPage = null,Object? screenLibraryPath = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? themeMode = null,Object? autoRefreshIntervalSeconds = null,Object? enableAutoRefresh = null,Object? rememberWindowState = null,Object? editorFontSize = null,Object? editorLineNumbers = null,Object? editorWordWrap = null,Object? retainPdfPage = null,Object? screenLibraryPath = freezed,Object? lastProjectPath = freezed,}) {
   return _then(_self.copyWith(
 themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
 as ThemeMode,autoRefreshIntervalSeconds: null == autoRefreshIntervalSeconds ? _self.autoRefreshIntervalSeconds : autoRefreshIntervalSeconds // ignore: cast_nullable_to_non_nullable
@@ -80,6 +81,7 @@ as int,editorLineNumbers: null == editorLineNumbers ? _self.editorLineNumbers : 
 as bool,editorWordWrap: null == editorWordWrap ? _self.editorWordWrap : editorWordWrap // ignore: cast_nullable_to_non_nullable
 as bool,retainPdfPage: null == retainPdfPage ? _self.retainPdfPage : retainPdfPage // ignore: cast_nullable_to_non_nullable
 as bool,screenLibraryPath: freezed == screenLibraryPath ? _self.screenLibraryPath : screenLibraryPath // ignore: cast_nullable_to_non_nullable
+as String?,lastProjectPath: freezed == lastProjectPath ? _self.lastProjectPath : lastProjectPath // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -162,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@ThemeModeConverter()  ThemeMode themeMode,  int autoRefreshIntervalSeconds,  bool enableAutoRefresh,  bool rememberWindowState,  int editorFontSize,  bool editorLineNumbers,  bool editorWordWrap,  bool retainPdfPage,  String? screenLibraryPath)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@ThemeModeConverter()  ThemeMode themeMode,  int autoRefreshIntervalSeconds,  bool enableAutoRefresh,  bool rememberWindowState,  int editorFontSize,  bool editorLineNumbers,  bool editorWordWrap,  bool retainPdfPage,  String? screenLibraryPath,  String? lastProjectPath)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserPreferences() when $default != null:
-return $default(_that.themeMode,_that.autoRefreshIntervalSeconds,_that.enableAutoRefresh,_that.rememberWindowState,_that.editorFontSize,_that.editorLineNumbers,_that.editorWordWrap,_that.retainPdfPage,_that.screenLibraryPath);case _:
+return $default(_that.themeMode,_that.autoRefreshIntervalSeconds,_that.enableAutoRefresh,_that.rememberWindowState,_that.editorFontSize,_that.editorLineNumbers,_that.editorWordWrap,_that.retainPdfPage,_that.screenLibraryPath,_that.lastProjectPath);case _:
   return orElse();
 
 }
@@ -183,10 +185,10 @@ return $default(_that.themeMode,_that.autoRefreshIntervalSeconds,_that.enableAut
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@ThemeModeConverter()  ThemeMode themeMode,  int autoRefreshIntervalSeconds,  bool enableAutoRefresh,  bool rememberWindowState,  int editorFontSize,  bool editorLineNumbers,  bool editorWordWrap,  bool retainPdfPage,  String? screenLibraryPath)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@ThemeModeConverter()  ThemeMode themeMode,  int autoRefreshIntervalSeconds,  bool enableAutoRefresh,  bool rememberWindowState,  int editorFontSize,  bool editorLineNumbers,  bool editorWordWrap,  bool retainPdfPage,  String? screenLibraryPath,  String? lastProjectPath)  $default,) {final _that = this;
 switch (_that) {
 case _UserPreferences():
-return $default(_that.themeMode,_that.autoRefreshIntervalSeconds,_that.enableAutoRefresh,_that.rememberWindowState,_that.editorFontSize,_that.editorLineNumbers,_that.editorWordWrap,_that.retainPdfPage,_that.screenLibraryPath);}
+return $default(_that.themeMode,_that.autoRefreshIntervalSeconds,_that.enableAutoRefresh,_that.rememberWindowState,_that.editorFontSize,_that.editorLineNumbers,_that.editorWordWrap,_that.retainPdfPage,_that.screenLibraryPath,_that.lastProjectPath);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -200,10 +202,10 @@ return $default(_that.themeMode,_that.autoRefreshIntervalSeconds,_that.enableAut
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@ThemeModeConverter()  ThemeMode themeMode,  int autoRefreshIntervalSeconds,  bool enableAutoRefresh,  bool rememberWindowState,  int editorFontSize,  bool editorLineNumbers,  bool editorWordWrap,  bool retainPdfPage,  String? screenLibraryPath)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@ThemeModeConverter()  ThemeMode themeMode,  int autoRefreshIntervalSeconds,  bool enableAutoRefresh,  bool rememberWindowState,  int editorFontSize,  bool editorLineNumbers,  bool editorWordWrap,  bool retainPdfPage,  String? screenLibraryPath,  String? lastProjectPath)?  $default,) {final _that = this;
 switch (_that) {
 case _UserPreferences() when $default != null:
-return $default(_that.themeMode,_that.autoRefreshIntervalSeconds,_that.enableAutoRefresh,_that.rememberWindowState,_that.editorFontSize,_that.editorLineNumbers,_that.editorWordWrap,_that.retainPdfPage,_that.screenLibraryPath);case _:
+return $default(_that.themeMode,_that.autoRefreshIntervalSeconds,_that.enableAutoRefresh,_that.rememberWindowState,_that.editorFontSize,_that.editorLineNumbers,_that.editorWordWrap,_that.retainPdfPage,_that.screenLibraryPath,_that.lastProjectPath);case _:
   return null;
 
 }
@@ -215,7 +217,7 @@ return $default(_that.themeMode,_that.autoRefreshIntervalSeconds,_that.enableAut
 @JsonSerializable()
 
 class _UserPreferences extends UserPreferences {
-  const _UserPreferences({@ThemeModeConverter() this.themeMode = ThemeMode.dark, this.autoRefreshIntervalSeconds = 10, this.enableAutoRefresh = true, this.rememberWindowState = true, this.editorFontSize = 14, this.editorLineNumbers = true, this.editorWordWrap = true, this.retainPdfPage = true, this.screenLibraryPath = null}): super._();
+  const _UserPreferences({@ThemeModeConverter() this.themeMode = ThemeMode.dark, this.autoRefreshIntervalSeconds = 10, this.enableAutoRefresh = true, this.rememberWindowState = true, this.editorFontSize = 14, this.editorLineNumbers = true, this.editorWordWrap = true, this.retainPdfPage = true, this.screenLibraryPath = null, this.lastProjectPath = null}): super._();
   factory _UserPreferences.fromJson(Map<String, dynamic> json) => _$UserPreferencesFromJson(json);
 
 // Application settings
@@ -231,6 +233,8 @@ class _UserPreferences extends UserPreferences {
 @override@JsonKey() final  bool retainPdfPage;
 // Screen library
 @override@JsonKey() final  String? screenLibraryPath;
+// Session restore
+@override@JsonKey() final  String? lastProjectPath;
 
 /// Create a copy of UserPreferences
 /// with the given fields replaced by the non-null parameter values.
@@ -245,16 +249,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserPreferences&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.autoRefreshIntervalSeconds, autoRefreshIntervalSeconds) || other.autoRefreshIntervalSeconds == autoRefreshIntervalSeconds)&&(identical(other.enableAutoRefresh, enableAutoRefresh) || other.enableAutoRefresh == enableAutoRefresh)&&(identical(other.rememberWindowState, rememberWindowState) || other.rememberWindowState == rememberWindowState)&&(identical(other.editorFontSize, editorFontSize) || other.editorFontSize == editorFontSize)&&(identical(other.editorLineNumbers, editorLineNumbers) || other.editorLineNumbers == editorLineNumbers)&&(identical(other.editorWordWrap, editorWordWrap) || other.editorWordWrap == editorWordWrap)&&(identical(other.retainPdfPage, retainPdfPage) || other.retainPdfPage == retainPdfPage)&&(identical(other.screenLibraryPath, screenLibraryPath) || other.screenLibraryPath == screenLibraryPath));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserPreferences&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.autoRefreshIntervalSeconds, autoRefreshIntervalSeconds) || other.autoRefreshIntervalSeconds == autoRefreshIntervalSeconds)&&(identical(other.enableAutoRefresh, enableAutoRefresh) || other.enableAutoRefresh == enableAutoRefresh)&&(identical(other.rememberWindowState, rememberWindowState) || other.rememberWindowState == rememberWindowState)&&(identical(other.editorFontSize, editorFontSize) || other.editorFontSize == editorFontSize)&&(identical(other.editorLineNumbers, editorLineNumbers) || other.editorLineNumbers == editorLineNumbers)&&(identical(other.editorWordWrap, editorWordWrap) || other.editorWordWrap == editorWordWrap)&&(identical(other.retainPdfPage, retainPdfPage) || other.retainPdfPage == retainPdfPage)&&(identical(other.screenLibraryPath, screenLibraryPath) || other.screenLibraryPath == screenLibraryPath)&&(identical(other.lastProjectPath, lastProjectPath) || other.lastProjectPath == lastProjectPath));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,themeMode,autoRefreshIntervalSeconds,enableAutoRefresh,rememberWindowState,editorFontSize,editorLineNumbers,editorWordWrap,retainPdfPage,screenLibraryPath);
+int get hashCode => Object.hash(runtimeType,themeMode,autoRefreshIntervalSeconds,enableAutoRefresh,rememberWindowState,editorFontSize,editorLineNumbers,editorWordWrap,retainPdfPage,screenLibraryPath,lastProjectPath);
 
 @override
 String toString() {
-  return 'UserPreferences(themeMode: $themeMode, autoRefreshIntervalSeconds: $autoRefreshIntervalSeconds, enableAutoRefresh: $enableAutoRefresh, rememberWindowState: $rememberWindowState, editorFontSize: $editorFontSize, editorLineNumbers: $editorLineNumbers, editorWordWrap: $editorWordWrap, retainPdfPage: $retainPdfPage, screenLibraryPath: $screenLibraryPath)';
+  return 'UserPreferences(themeMode: $themeMode, autoRefreshIntervalSeconds: $autoRefreshIntervalSeconds, enableAutoRefresh: $enableAutoRefresh, rememberWindowState: $rememberWindowState, editorFontSize: $editorFontSize, editorLineNumbers: $editorLineNumbers, editorWordWrap: $editorWordWrap, retainPdfPage: $retainPdfPage, screenLibraryPath: $screenLibraryPath, lastProjectPath: $lastProjectPath)';
 }
 
 
@@ -265,7 +269,7 @@ abstract mixin class _$UserPreferencesCopyWith<$Res> implements $UserPreferences
   factory _$UserPreferencesCopyWith(_UserPreferences value, $Res Function(_UserPreferences) _then) = __$UserPreferencesCopyWithImpl;
 @override @useResult
 $Res call({
-@ThemeModeConverter() ThemeMode themeMode, int autoRefreshIntervalSeconds, bool enableAutoRefresh, bool rememberWindowState, int editorFontSize, bool editorLineNumbers, bool editorWordWrap, bool retainPdfPage, String? screenLibraryPath
+@ThemeModeConverter() ThemeMode themeMode, int autoRefreshIntervalSeconds, bool enableAutoRefresh, bool rememberWindowState, int editorFontSize, bool editorLineNumbers, bool editorWordWrap, bool retainPdfPage, String? screenLibraryPath, String? lastProjectPath
 });
 
 
@@ -282,7 +286,7 @@ class __$UserPreferencesCopyWithImpl<$Res>
 
 /// Create a copy of UserPreferences
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? themeMode = null,Object? autoRefreshIntervalSeconds = null,Object? enableAutoRefresh = null,Object? rememberWindowState = null,Object? editorFontSize = null,Object? editorLineNumbers = null,Object? editorWordWrap = null,Object? retainPdfPage = null,Object? screenLibraryPath = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? themeMode = null,Object? autoRefreshIntervalSeconds = null,Object? enableAutoRefresh = null,Object? rememberWindowState = null,Object? editorFontSize = null,Object? editorLineNumbers = null,Object? editorWordWrap = null,Object? retainPdfPage = null,Object? screenLibraryPath = freezed,Object? lastProjectPath = freezed,}) {
   return _then(_UserPreferences(
 themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
 as ThemeMode,autoRefreshIntervalSeconds: null == autoRefreshIntervalSeconds ? _self.autoRefreshIntervalSeconds : autoRefreshIntervalSeconds // ignore: cast_nullable_to_non_nullable
@@ -293,6 +297,7 @@ as int,editorLineNumbers: null == editorLineNumbers ? _self.editorLineNumbers : 
 as bool,editorWordWrap: null == editorWordWrap ? _self.editorWordWrap : editorWordWrap // ignore: cast_nullable_to_non_nullable
 as bool,retainPdfPage: null == retainPdfPage ? _self.retainPdfPage : retainPdfPage // ignore: cast_nullable_to_non_nullable
 as bool,screenLibraryPath: freezed == screenLibraryPath ? _self.screenLibraryPath : screenLibraryPath // ignore: cast_nullable_to_non_nullable
+as String?,lastProjectPath: freezed == lastProjectPath ? _self.lastProjectPath : lastProjectPath // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

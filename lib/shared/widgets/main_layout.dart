@@ -15,6 +15,7 @@ import '../../features/preview/services/detachable_window_service.dart';
 import '../../features/preview/services/auto_refresh_service.dart';
 import '../../features/editor/services/search_provider.dart';
 import '../../features/settings/widgets/settings_dialog.dart';
+import '../../features/settings/services/settings_service.dart';
 import '../../features/screens/widgets/screen_picker_dialog.dart';
 
 /// Whether the live PDF preview panel is shown. Turning it off removes the
@@ -70,9 +71,9 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
       ],
     );
     
-    // Auto-load sample project and open chapter 04
+    // Restore last opened project (or fall back to sample project)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _autoLoadSampleProject();
+      _autoRestoreProject();
     });
   }
 
@@ -82,29 +83,44 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     super.dispose();
   }
 
-  /// Auto-load the sample project and open chapter 04
-  Future<void> _autoLoadSampleProject() async {
+  /// Restore the last opened project on startup, falling back to the sample project.
+  Future<void> _autoRestoreProject() async {
     try {
-      // Get the current directory and look for sample-project
-      final currentDir = Directory.current.path;
-      final sampleProjectPath = p.join(currentDir, 'sample-project');
+      // Try to restore the last opened project
+      final prefs = await ref.read(userPreferencesProvider.future);
+      final lastPath = prefs.lastProjectPath;
 
-      // Check if sample project exists
+      if (lastPath != null && await Directory(lastPath).exists()) {
+        await ref.read(projectTreeProvider.notifier).loadProject(lastPath);
+        return;
+      }
+
+      // Fall back to the bundled sample project
+      final sampleProjectPath = p.join(Directory.current.path, 'sample-project');
       if (await Directory(sampleProjectPath).exists()) {
-        // Load the project
         await ref.read(projectTreeProvider.notifier).loadProject(sampleProjectPath);
 
-        // Wait a bit for the project to load
         await Future.delayed(const Duration(milliseconds: 500));
 
-        // Open chapter 04
         final chapter04Path = p.join(sampleProjectPath, 'chapters', '04-master-clock-screens.typ');
         if (await File(chapter04Path).exists()) {
           await ref.read(editorProvider.notifier).openFile(chapter04Path);
         }
       }
     } catch (e) {
-      // Failed to auto-load sample project - ignore silently
+      // Failed to restore project - ignore silently
+    }
+  }
+
+  /// Save the given project path as the last used project.
+  Future<void> _saveLastProjectPath(String path) async {
+    try {
+      final prefs = await ref.read(userPreferencesProvider.future);
+      await ref
+          .read(userPreferencesProvider.notifier)
+          .updatePreferences(prefs.copyWith(lastProjectPath: path));
+    } catch (e) {
+      // Non-critical, ignore
     }
   }
 
@@ -464,8 +480,8 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     );
 
     if (projectPath != null && mounted) {
-      // Load the newly created project
       await ref.read(projectTreeProvider.notifier).loadProject(projectPath);
+      await _saveLastProjectPath(projectPath);
     }
   }
 
@@ -476,6 +492,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
 
     if (result != null && mounted) {
       await ref.read(projectTreeProvider.notifier).loadProject(result);
+      await _saveLastProjectPath(result);
     }
   }
 

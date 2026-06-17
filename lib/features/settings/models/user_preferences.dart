@@ -59,6 +59,9 @@ sealed class UserPreferences with _$UserPreferences {
 
     // Screen library
     @Default(null) String? screenLibraryPath,
+
+    // Session restore
+    @Default(null) String? lastProjectPath,
   }) = _UserPreferences;
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>

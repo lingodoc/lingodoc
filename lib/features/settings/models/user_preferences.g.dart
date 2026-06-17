@@ -20,6 +20,7 @@ _UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
       editorWordWrap: json['editorWordWrap'] as bool? ?? true,
       retainPdfPage: json['retainPdfPage'] as bool? ?? true,
       screenLibraryPath: json['screenLibraryPath'] as String? ?? null,
+      lastProjectPath: json['lastProjectPath'] as String? ?? null,
     );
 
 Map<String, dynamic> _$UserPreferencesToJson(_UserPreferences instance) =>
@@ -33,4 +34,5 @@ Map<String, dynamic> _$UserPreferencesToJson(_UserPreferences instance) =>
       'editorWordWrap': instance.editorWordWrap,
       'retainPdfPage': instance.retainPdfPage,
       'screenLibraryPath': instance.screenLibraryPath,
+      'lastProjectPath': instance.lastProjectPath,
     };
