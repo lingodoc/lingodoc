@@ -425,14 +425,17 @@ class _PdfViewerState extends State<PdfViewer> {
               const Spacer(),
 
               // Page navigation controls
-              Text(
-                'Use mouse wheel or gestures to navigate',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+              Flexible(
+                child: Text(
+                  'Use mouse wheel or gestures to navigate',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
 
-              const SizedBox(width: 16),
+              const SizedBox(width: 8),
 
               // Jump to source (PDF → editor), enabled only when sync anchors
               // are available.
