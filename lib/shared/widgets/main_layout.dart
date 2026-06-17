@@ -344,7 +344,10 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                   label: 'Detach Preview',
                   icon: Icons.open_in_new,
                   shortcut: 'Ctrl+D',
-                  onTap: () {}, // TODO: Step 14
+                  onTap: () => detachableWindowService.openDetachedWindow(
+                    context: context,
+                    ref: ref,
+                  ),
                 ),
               ],
             ),
@@ -461,7 +464,10 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
               IconButton(
                 icon: const Icon(Icons.open_in_new, size: 18),
                 tooltip: 'Detach Window',
-                onPressed: () {}, // TODO: Step 14
+                onPressed: () => detachableWindowService.openDetachedWindow(
+                  context: context,
+                  ref: ref,
+                ),
               ),
             ],
           ),
