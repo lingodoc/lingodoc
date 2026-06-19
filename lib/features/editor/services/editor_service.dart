@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as path;
 import '../models/editor_tab.dart';
+import '../../translation/services/translation_state_provider.dart';
+import '../../todo/services/todo_provider.dart';
 
 /// State class for editor management
 @immutable
@@ -207,6 +209,15 @@ class EditorNotifier extends Notifier<EditorState> {
         tabs: updatedTabs,
         activeTabIndex: state.activeTabIndex,
       );
+
+      // Recompute translation staleness for the saved file (fire-and-forget,
+      // off the save critical path; a no-op for non-translation files).
+      ref
+          .read(translationStateProvider.notifier)
+          .onFileSaved(tab.filePath, tab.content);
+
+      // Rescan the saved file for TODO markers.
+      ref.read(todoProvider.notifier).onFileSaved(tab.filePath, tab.content);
     } catch (e) {
       state = state.copyWith(error: 'Failed to save file: $e');
     }

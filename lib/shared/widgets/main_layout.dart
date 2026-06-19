@@ -17,6 +17,10 @@ import '../../features/editor/services/search_provider.dart';
 import '../../features/settings/widgets/settings_dialog.dart';
 import '../../features/settings/services/settings_service.dart';
 import '../../features/screens/widgets/screen_picker_dialog.dart';
+import '../../features/translation/services/translation_staleness.dart';
+import '../../features/translation/services/translation_state_provider.dart';
+import '../../features/todo/services/todo_provider.dart';
+import '../../features/todo/widgets/tasks_panel.dart';
 
 /// Whether the live PDF preview panel is shown. Turning it off removes the
 /// preview from the layout and stops the auto-refresh compile loop — useful for
@@ -31,6 +35,19 @@ class PreviewEnabledNotifier extends Notifier<bool> {
 
 final previewEnabledProvider =
     NotifierProvider<PreviewEnabledNotifier, bool>(PreviewEnabledNotifier.new);
+
+/// Whether the translation-staleness panel is shown below the editor.
+class TranslationPanelVisibleNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void toggle() => state = !state;
+  void set(bool value) => state = value;
+}
+
+final translationPanelVisibleProvider =
+    NotifierProvider<TranslationPanelVisibleNotifier, bool>(
+        TranslationPanelVisibleNotifier.new);
 
 /// Intent for save action
 class SaveIntent extends Intent {
@@ -422,6 +439,19 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   }
 
   Widget _buildEditorPanel() {
+    final panelVisible = ref.watch(translationPanelVisibleProvider);
+    // Combined task count (stale translations + TODO markers) for the badge.
+    final translation = ref.watch(translationStateProvider);
+    var totalStale = 0;
+    for (final file in translation.files.values) {
+      totalStale += totalStaleForFile(file);
+    }
+    var totalTodos = 0;
+    for (final todos in ref.watch(todoProvider).values) {
+      totalTodos += todos.length;
+    }
+    final totalTasks = totalStale + totalTodos;
+
     return Container(
       color: Theme.of(context).colorScheme.surface,
       child: Column(
@@ -432,6 +462,17 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             icon: Icons.edit,
             actions: [
               IconButton(
+                icon: _StaleBadgeIcon(
+                  count: totalTasks,
+                  active: panelVisible,
+                ),
+                tooltip: totalTasks > 0
+                    ? '$totalTasks open task(s)'
+                    : 'Tasks',
+                onPressed: () =>
+                    ref.read(translationPanelVisibleProvider.notifier).toggle(),
+              ),
+              IconButton(
                 icon: const Icon(Icons.settings, size: 18),
                 tooltip: 'Editor Settings',
                 onPressed: () {}, // TODO: Step 15
@@ -441,6 +482,15 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           const Expanded(
             child: EditorTabs(),
           ),
+          if (panelVisible)
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 220),
+              child: TasksPanel(
+                onClose: () => ref
+                    .read(translationPanelVisibleProvider.notifier)
+                    .set(false),
+              ),
+            ),
         ],
       ),
     );
@@ -692,5 +742,29 @@ class _MenuDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Divider(height: 1);
+  }
+}
+
+/// A translate icon with a small count badge when translations are out of date.
+class _StaleBadgeIcon extends StatelessWidget {
+  final int count;
+  final bool active;
+
+  const _StaleBadgeIcon({required this.count, required this.active});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final icon = Icon(
+      Icons.checklist,
+      size: 18,
+      color: active ? theme.colorScheme.primary : null,
+    );
+    if (count == 0) return icon;
+    return Badge(
+      label: Text('$count'),
+      backgroundColor: theme.colorScheme.tertiary,
+      child: icon,
+    );
   }
 }

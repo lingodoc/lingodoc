@@ -278,6 +278,9 @@ lang.typ
 # Project-specific terms (not for version control)
 terms.typ
 
+# Note: .lingodoc/ (translation-staleness state) is intentionally committed so
+# review status travels with the content — do not ignore it.
+
 # OS-specific files
 .DS_Store
 Thumbs.db

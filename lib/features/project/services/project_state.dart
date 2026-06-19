@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'file_system_service.dart';
 import '../models/file_tree_node.dart';
+import '../../translation/services/translation_state_provider.dart';
+import '../../todo/services/todo_provider.dart';
 
 /// State class for project tree
 @immutable
@@ -58,6 +60,14 @@ class ProjectTreeNotifier extends Notifier<ProjectTreeState> {
         nodes: nodes,
         isLoading: false,
       );
+
+      // Load translation-staleness state for the newly opened project.
+      await ref
+          .read(translationStateProvider.notifier)
+          .loadForProject(projectPath);
+
+      // Scan the project for TODO markers.
+      await ref.read(todoProvider.notifier).loadForProject(projectPath);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,

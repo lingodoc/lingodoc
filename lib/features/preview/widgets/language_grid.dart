@@ -5,6 +5,9 @@ import '../../project/models/project_config.dart';
 import '../services/preview_provider.dart';
 import '../../project/services/project_state.dart';
 import '../../typst/models/compilation_result.dart';
+import '../../editor/services/editor_service.dart';
+import '../../translation/services/translation_staleness.dart';
+import '../../translation/services/translation_state_provider.dart';
 
 /// Multi-language preview grid with column selector
 class LanguageGrid extends ConsumerStatefulWidget {
@@ -58,6 +61,8 @@ class _LanguageGridState extends ConsumerState<LanguageGrid> {
         .map((e) => e.key)
         .toList();
 
+    final staleLangs = _staleLangsForActiveFile();
+
     return Column(
       children: [
         // Toolbar with language column selector
@@ -67,10 +72,21 @@ class _LanguageGridState extends ConsumerState<LanguageGrid> {
         Expanded(
           child: selectedLangs.isEmpty
               ? _buildEmptyState(theme)
-              : _buildGrid(theme, selectedLangs),
+              : _buildGrid(theme, selectedLangs, staleLangs),
         ),
       ],
     );
+  }
+
+  /// Languages whose translations are out of date in the currently active
+  /// editor file (staleness is tracked per source file).
+  Set<String> _staleLangsForActiveFile() {
+    final projectPath = ref.watch(projectTreeProvider).projectPath;
+    final activeTab = ref.watch(editorProvider).activeTab;
+    if (projectPath == null || activeTab == null) return const {};
+    final relPath = translationRelPath(projectPath, activeTab.filePath);
+    final fileState = ref.watch(translationStateProvider).files[relPath];
+    return staleCountsByLang(fileState).keys.toSet();
   }
 
   Widget _buildToolbar(ThemeData theme, List<String> selectedLangs) {
@@ -127,7 +143,8 @@ class _LanguageGridState extends ConsumerState<LanguageGrid> {
     );
   }
 
-  Widget _buildGrid(ThemeData theme, List<String> selectedLangs) {
+  Widget _buildGrid(
+      ThemeData theme, List<String> selectedLangs, Set<String> staleLangs) {
     // Determine grid columns based on selected language count
     final columnCount = selectedLangs.length <= 1 ? 1
         : selectedLangs.length == 2 ? 2
@@ -158,13 +175,32 @@ class _LanguageGridState extends ConsumerState<LanguageGrid> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                 color: theme.colorScheme.primaryContainer,
-                child: Text(
-                  '${lang.name} (${lang.code})',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onPrimaryContainer,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  textAlign: TextAlign.center,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        '${lang.name} (${lang.code})',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (staleLangs.contains(langCode)) ...[
+                      const SizedBox(width: 6),
+                      Tooltip(
+                        message: 'Translation out of date in this file',
+                        child: Icon(
+                          Icons.circle,
+                          size: 8,
+                          color: theme.colorScheme.tertiary,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
               // PDF viewer with synchronized scrolling - wrapped for state preservation

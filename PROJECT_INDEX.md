@@ -1,7 +1,7 @@
 # PROJECT_INDEX.md — LingoDoc Flutter
 
 > **Token Savings**: ~94% reduction — read this (~3K tokens) instead of scanning all source files (~58K tokens).
-> **Generated**: 2026-04-05 | **Version**: 0.1.0+1
+> **Generated**: 2026-06-18 | **Version**: 0.1.0+1 | **Source files**: 63 Dart (excl. codegen) · 9 test files
 
 ---
 
@@ -30,6 +30,7 @@ lingodoc-flutter/
 │   │   │   │   └── typst_language_mode.dart # CodeEditor language mode definition
 │   │   │   ├── services/
 │   │   │   │   ├── autocomplete_service.dart  # Typst function + project terms autocomplete
+│   │   │   │   ├── chapter_split_service.dart # Plans splitting a chapter at heading boundaries
 │   │   │   │   ├── editor_service.dart        # EditorNotifier (Riverpod), tab CRUD, file I/O
 │   │   │   │   └── search_provider.dart       # SearchNotifier + SearchState (Freezed)
 │   │   │   └── widgets/
@@ -44,7 +45,10 @@ lingodoc-flutter/
 │   │   │   ├── services/
 │   │   │   │   ├── auto_refresh_service.dart     # Debounce + 10s periodic compile timer
 │   │   │   │   ├── detachable_window_service.dart # DetachableWindowNotifier (multi-window)
-│   │   │   │   └── preview_provider.dart          # PdfPreviewNotifier, typstCompilerProvider
+│   │   │   │   ├── preview_provider.dart          # PdfPreviewNotifier, typstCompilerProvider
+│   │   │   │   ├── sync_anchor_injector.dart      # Injects #metadata line markers into source for sync
+│   │   │   │   ├── sync_controller.dart           # syncControllerProvider: editor↔PDF scroll/caret bridge
+│   │   │   │   └── sync_mapping_service.dart      # Builds SyncMap (source line ↔ PDF page+y) from anchors
 │   │   │   └── widgets/
 │   │   │       ├── detached_preview_window.dart   # Standalone preview window widget
 │   │   │       ├── detached_window_entry.dart     # Entry point for detached window process
@@ -66,8 +70,16 @@ lingodoc-flutter/
 │   │   │   │   ├── project_scaffolding_service.dart # Creates new project with template files
 │   │   │   │   └── project_state.dart      # ProjectTreeNotifier: load, select file, refresh
 │   │   │   └── widgets/
+│   │   │       ├── chapter_split_dialog.dart # Pick sections to split into separate files
 │   │   │       ├── new_project_wizard.dart # Multi-step new project creation dialog
 │   │   │       └── project_tree.dart       # File tree panel widget (flutter_treeview)
+│   │   ├── screens/                        # Apollo III HTML screen library
+│   │   │   ├── models/
+│   │   │   │   └── screen_entry.dart       # ScreenEntry: number, title, availableLanguages
+│   │   │   ├── services/
+│   │   │   │   └── screen_library_service.dart # screenLibraryProvider: loads screens from configured dir
+│   │   │   └── widgets/
+│   │   │       └── screen_picker_dialog.dart   # Browse library, insert #screen(N) at cursor
 │   │   ├── settings/
 │   │   │   ├── models/
 │   │   │   │   └── user_preferences.dart   # Freezed: themeMode, autoRefreshIntervalSeconds,
@@ -79,7 +91,8 @@ lingodoc-flutter/
 │   │   │       └── settings_dialog.dart    # Settings UI dialog
 │   │   └── typst/
 │   │       ├── models/
-│   │       │   └── compilation_result.dart # Freezed: success, pdfPath, errorMessage, languageCode
+│   │       │   ├── compilation_result.dart # Freezed: success, pdfPath, errorMessage, languageCode
+│   │       │   └── sync_anchor.dart        # SyncAnchor: filePath+line ↔ PDF page+y (editor↔PDF sync)
 │   │       ├── services/
 │   │       │   ├── typst_compiler.dart     # Runs `typst compile`, injects lang.typ, returns PDF path
 │   │       │   ├── typst_installer.dart    # Downloads & installs Typst binary (with SHA256 verify)
@@ -143,6 +156,9 @@ All re-exported from `lib/shared/providers/app_providers.dart`.
 | `userPreferencesProvider` | `NotifierProvider<…, UserPreferences>` | `settings_service.dart` | Live user preferences state |
 | `typstPathResolverProvider` | `Provider<TypstPathResolver>` | `typst_path_resolver.dart` | Executable lookup |
 | `typstStartupCheckProvider` | `FutureProvider<bool>` | `typst_startup_check.dart` | Is Typst installed? |
+| `syncControllerProvider` | `Provider<SyncController>` | `sync_controller.dart` | Editor↔PDF scroll/caret bridge (streams, not state) |
+| `screenLibraryPathProvider` | `Provider<String?>` | `screen_library_service.dart` | Screen library dir from prefs |
+| `screenLibraryProvider` | `FutureProvider<List<ScreenEntry>>` | `screen_library_service.dart` | Loads Apollo III screens from library |
 
 ---
 
@@ -158,7 +174,9 @@ All re-exported from `lib/shared/providers/app_providers.dart`.
 | `PdfPreviewState` | `pdfPath`, `languageCode`, `isCompiling`, `errorMessage`, `lastCompiled` | `preview/models/preview_state.dart` |
 | `DetachableWindowState` | `isDetached`, `pdfPath`, `selectedLanguage`, `isCompiling` | `preview/models/detachable_window_state.dart` |
 | `SearchState` | `isVisible`, `searchQuery`, `currentMatchIndex`, `totalMatches`, `caseSensitive`, `wholeWord`, `useRegex` | `editor/services/search_provider.dart` |
-| `UserPreferences` | `themeMode`, `autoRefreshIntervalSeconds`, `enableAutoRefresh`, `retainPdfPage`, `editorFontSize`, `editorLineNumbers`, `editorWordWrap` | `settings/models/user_preferences.dart` |
+| `UserPreferences` | `themeMode`, `autoRefreshIntervalSeconds`, `enableAutoRefresh`, `rememberWindowState`, `editorFontSize`, `editorLineNumbers`, `editorWordWrap`, `retainPdfPage`, `screenLibraryPath`, `lastProjectPath` | `settings/models/user_preferences.dart` |
+
+> Plain (non-Freezed) data classes: `SyncAnchor` (`filePath`, `line`, `page`, `y` — `typst/models/sync_anchor.dart`); `SyncMap`/`SyncTarget`/`SyncSourceLocation` (`preview/services/sync_mapping_service.dart`); `ScreenEntry` (`number`, `title`, `availableLanguages` — `screens/models/screen_entry.dart`); `SplitPlan` (`editor/services/chapter_split_service.dart`).
 
 ---
 
@@ -177,6 +195,11 @@ All re-exported from `lib/shared/providers/app_providers.dart`.
 | `SettingsService` | Via provider | JSON <-> `SharedPreferences` for `UserPreferences` |
 | `PathValidator` | Static util | ISO 639-1/2 language code validation; path traversal prevention |
 | `AutocompleteService` | Per-editor | Typst built-ins + project `terms.typ` suggestions with 150ms debounce |
+| `SyncController` | Via provider | Editor↔PDF bridge: forward (caret→PDF scroll) + inverse (PDF tap→caret) streams |
+| `SyncAnchorInjector` | Stateless | Injects line-tagged `#metadata` markers into chapter source pre-compile |
+| `SyncMappingService` | Stateless | Builds `SyncMap` from compiled PDF metadata query (line ↔ page+y) |
+| `ChapterSplitService` | Stateless | Plans a `SplitPlan` from caret position; splits at heading (level ≤ 3) boundaries |
+| `ScreenLibraryService` | Via provider | Loads `ScreenEntry` list from configured Apollo III HTML screen library |
 
 ---
 
@@ -200,6 +223,32 @@ All re-exported from `lib/shared/providers/app_providers.dart`.
 | 14 | done | Detachable preview window (desktop_multi_window) |
 | 15 | done | Settings dialog (UserPreferences + SharedPreferences) |
 | 16 | partial | Polish: error handling, loading states, keyboard shortcuts |
+
+### Beyond the roadmap (recent)
+
+| Feature | Status | Key files |
+|---------|--------|-----------|
+| Editor↔PDF bidirectional sync | done | `preview/services/sync_controller.dart`, `sync_anchor_injector.dart`, `sync_mapping_service.dart`, `typst/models/sync_anchor.dart` |
+| Chapter splitting at headings | done | `editor/services/chapter_split_service.dart`, `project/widgets/chapter_split_dialog.dart` |
+| Apollo III screen library (`#screen(N)`) | done | `screens/` feature (model, service, picker dialog) |
+| Reopen last project on startup | done | `lastProjectPath` pref + `app_startup.dart` |
+| Large-file handling | done | editor open/save path |
+
+---
+
+## 🧪 Test Coverage (9 files)
+
+| Test file | Covers |
+|-----------|--------|
+| `test/core/utils/path_validator_test.dart` | Path traversal + language code validation |
+| `test/core/services/timer_service_test.dart` | Timer registry conflict prevention |
+| `test/features/editor/services/editor_notifier_test.dart` | Tab CRUD / dirty state |
+| `test/features/editor/services/chapter_split_service_test.dart` | Split-plan generation |
+| `test/features/preview/services/sync_anchor_injector_test.dart` | Metadata marker injection |
+| `test/features/preview/services/sync_mapping_service_test.dart` | Source↔PDF mapping |
+| `test/features/project/services/config_service_test.dart` | TOML → ProjectConfig parsing |
+| `test/features/typst/services/typst_installer_checksum_test.dart` | SHA256 verification |
+| `test/features/typst/services/typst_path_resolver_test.dart` | Executable lookup |
 
 ---
 
@@ -305,3 +354,6 @@ flutter test
 | New project wizard | `project/services/project_scaffolding_service.dart`, `project/widgets/new_project_wizard.dart` |
 | PDF viewer behavior | `preview/widgets/pdf_viewer.dart`, `preview/widgets/preview_panel.dart` |
 | Config parsing | `project/services/config_service.dart`, `project/services/config_provider.dart` |
+| Editor↔PDF sync | `preview/services/sync_controller.dart` → `sync_anchor_injector.dart` / `sync_mapping_service.dart` |
+| Chapter splitting | `editor/services/chapter_split_service.dart`, `project/widgets/chapter_split_dialog.dart` |
+| Screen library (`#screen(N)`) | `screens/services/screen_library_service.dart`, `screens/widgets/screen_picker_dialog.dart` |

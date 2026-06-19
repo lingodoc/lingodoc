@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/editor_tab.dart';
 import '../services/editor_service.dart';
+import '../../project/services/project_state.dart';
+import '../../translation/services/translation_staleness.dart';
+import '../../translation/services/translation_state_provider.dart';
 import 'highlighted_code_editor.dart';
 
 /// Tab bar widget for managing multiple open files
@@ -11,6 +14,10 @@ class EditorTabs extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final editorState = ref.watch(editorProvider);
+    // Rebuild the tab bar when staleness or the open project changes so per-tab
+    // badges stay current.
+    ref.watch(translationStateProvider);
+    ref.watch(projectTreeProvider.select((s) => s.projectPath));
 
     if (editorState.tabs.isEmpty) {
       return _buildEmptyState(context);
@@ -71,12 +78,21 @@ class EditorTabs extends ConsumerWidget {
           return _TabItem(
             tab: tabs[index],
             isActive: index == activeIndex,
+            staleCount: _staleCountForTab(ref, tabs[index]),
             onTap: () => ref.read(editorProvider.notifier).setActiveTab(index),
             onClose: () => _handleCloseTab(context, ref, index, tabs[index]),
           );
         },
       ),
     );
+  }
+
+  /// Number of out-of-date translations in [tab]'s file (0 when none / unknown).
+  int _staleCountForTab(WidgetRef ref, EditorTab tab) {
+    final projectPath = ref.read(projectTreeProvider).projectPath;
+    if (projectPath == null) return 0;
+    final relPath = translationRelPath(projectPath, tab.filePath);
+    return totalStaleForFile(ref.read(translationStateProvider).files[relPath]);
   }
 
   Widget _buildActiveEditor(BuildContext context, WidgetRef ref, EditorTab? activeTab) {
@@ -139,12 +155,14 @@ class EditorTabs extends ConsumerWidget {
 class _TabItem extends StatefulWidget {
   final EditorTab tab;
   final bool isActive;
+  final int staleCount;
   final VoidCallback onTap;
   final VoidCallback onClose;
 
   const _TabItem({
     required this.tab,
     required this.isActive,
+    this.staleCount = 0,
     required this.onTap,
     required this.onClose,
   });
@@ -203,6 +221,30 @@ class _TabItemState extends State<_TabItem> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              // Out-of-date translations badge.
+              if (widget.staleCount > 0) ...[
+                const SizedBox(width: 4),
+                Tooltip(
+                  message:
+                      '${widget.staleCount} translation(s) out of date',
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.tertiary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${widget.staleCount}',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onTertiary,
+                            fontSize: 10,
+                            height: 1.1,
+                          ),
+                    ),
+                  ),
+                ),
+              ],
               // Dirty indicator / Close button
               if (widget.tab.isDirty && !_isHovered)
                 Container(
