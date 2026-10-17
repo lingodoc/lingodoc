@@ -33,8 +33,8 @@ class EditorState {
 
   EditorTab? get activeTab =>
       activeTabIndex != null && activeTabIndex! < tabs.length
-          ? tabs[activeTabIndex!]
-          : null;
+      ? tabs[activeTabIndex!]
+      : null;
 
   EditorState copyWith({
     List<EditorTab>? tabs,
@@ -51,9 +51,12 @@ class EditorState {
       activeTabIndex: activeTabIndex ?? this.activeTabIndex,
       isLoading: isLoading ?? this.isLoading,
       error: error,
-      pendingInsertion:
-          clearPendingInsertion ? null : (pendingInsertion ?? this.pendingInsertion),
-      pendingLineJump: clearLineJump ? null : (pendingLineJump ?? this.pendingLineJump),
+      pendingInsertion: clearPendingInsertion
+          ? null
+          : (pendingInsertion ?? this.pendingInsertion),
+      pendingLineJump: clearLineJump
+          ? null
+          : (pendingLineJump ?? this.pendingLineJump),
     );
   }
 }
@@ -69,7 +72,9 @@ class EditorNotifier extends Notifier<EditorState> {
   /// used by PDF→editor cross-file navigation.
   Future<void> openFile(String filePath, {int? jumpToLine}) async {
     // Check if file is already open
-    final existingIndex = state.tabs.indexWhere((tab) => tab.filePath == filePath);
+    final existingIndex = state.tabs.indexWhere(
+      (tab) => tab.filePath == filePath,
+    );
     if (existingIndex != -1) {
       // File already open, just switch to it
       setActiveTab(existingIndex);
@@ -141,8 +146,11 @@ class EditorNotifier extends Notifier<EditorState> {
       if (state.activeTabIndex == index) {
         // Closing active tab, activate the previous one or the first one
         newActiveIndex = index > 0 ? index - 1 : 0;
-        updatedTabs[newActiveIndex] = updatedTabs[newActiveIndex].copyWith(isActive: true);
-      } else if (state.activeTabIndex != null && state.activeTabIndex! > index) {
+        updatedTabs[newActiveIndex] = updatedTabs[newActiveIndex].copyWith(
+          isActive: true,
+        );
+      } else if (state.activeTabIndex != null &&
+          state.activeTabIndex! > index) {
         // Active tab is after the closed one, adjust index
         newActiveIndex = state.activeTabIndex! - 1;
       } else {
@@ -150,10 +158,7 @@ class EditorNotifier extends Notifier<EditorState> {
       }
     }
 
-    state = EditorState(
-      tabs: updatedTabs,
-      activeTabIndex: newActiveIndex,
-    );
+    state = EditorState(tabs: updatedTabs, activeTabIndex: newActiveIndex);
   }
 
   /// Set active tab
@@ -169,10 +174,7 @@ class EditorNotifier extends Notifier<EditorState> {
       growable: false,
     );
 
-    state = EditorState(
-      tabs: updatedTabs,
-      activeTabIndex: index,
-    );
+    state = EditorState(tabs: updatedTabs, activeTabIndex: index);
   }
 
   /// Update tab content

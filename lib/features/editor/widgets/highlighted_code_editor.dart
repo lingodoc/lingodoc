@@ -34,7 +34,8 @@ class HighlightedCodeEditor extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<HighlightedCodeEditor> createState() => _HighlightedCodeEditorState();
+  ConsumerState<HighlightedCodeEditor> createState() =>
+      _HighlightedCodeEditorState();
 }
 
 class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
@@ -164,7 +165,7 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
           content: Text(
             hasAnchors
                 ? "Couldn't locate this line in the PDF — place the caret "
-                    'inside a section.'
+                      'inside a section.'
                 : 'Sync data unavailable — compile the document first.',
           ),
           duration: const Duration(seconds: 3),
@@ -183,7 +184,9 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
       // The jump targets a different file — open it and carry the line over.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        ref.read(editorProvider.notifier).openFile(targetFile, jumpToLine: target.line);
+        ref
+            .read(editorProvider.notifier)
+            .openFile(targetFile, jumpToLine: target.line);
       });
       return;
     }
@@ -224,11 +227,14 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
         // whole document per keystroke would freeze the UI).
         if (!_isLargeFile) {
           _highlightDebounceTimer?.cancel();
-          _highlightDebounceTimer = Timer(const Duration(milliseconds: 150), () {
-            if (mounted) {
-              _updateAutocomplete();
-            }
-          });
+          _highlightDebounceTimer = Timer(
+            const Duration(milliseconds: 150),
+            () {
+              if (mounted) {
+                _updateAutocomplete();
+              }
+            },
+          );
         }
 
         // Continuous editor→PDF sync: follow the caret while enabled. Skipped
@@ -274,7 +280,8 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
 
     // Only update state if something actually changed
     final shouldShow = suggestions.isNotEmpty;
-    if (shouldShow != _showAutocomplete || !_listEquals(_suggestions, suggestions)) {
+    if (shouldShow != _showAutocomplete ||
+        !_listEquals(_suggestions, suggestions)) {
       setState(() {
         _showAutocomplete = shouldShow;
         _suggestions = suggestions;
@@ -315,17 +322,17 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
     final searchState = ref.watch(searchProvider);
 
     // Listen for insertion requests from the screen picker
-    ref.listen<String?>(
-      editorProvider.select((s) => s.pendingInsertion),
-      (_, next) {
-        if (next != null) {
-          _insertAtCursor(next);
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            ref.read(editorProvider.notifier).clearInsertion();
-          });
-        }
-      },
-    );
+    ref.listen<String?>(editorProvider.select((s) => s.pendingInsertion), (
+      _,
+      next,
+    ) {
+      if (next != null) {
+        _insertAtCursor(next);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref.read(editorProvider.notifier).clearInsertion();
+        });
+      }
+    });
 
     return Container(
       color: theme.colorScheme.surface,
@@ -342,10 +349,23 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
           Expanded(
             child: Shortcuts(
               shortcuts: {
-                LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyS): const _SaveIntent(),
-                LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyF): const _FindIntent(),
-                LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyJ): const _SyncForwardIntent(),
-                LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.alt, LogicalKeyboardKey.keyJ): const _SyncToggleIntent(),
+                LogicalKeySet(
+                  LogicalKeyboardKey.control,
+                  LogicalKeyboardKey.keyS,
+                ): const _SaveIntent(),
+                LogicalKeySet(
+                  LogicalKeyboardKey.control,
+                  LogicalKeyboardKey.keyF,
+                ): const _FindIntent(),
+                LogicalKeySet(
+                  LogicalKeyboardKey.control,
+                  LogicalKeyboardKey.keyJ,
+                ): const _SyncForwardIntent(),
+                LogicalKeySet(
+                  LogicalKeyboardKey.control,
+                  LogicalKeyboardKey.alt,
+                  LogicalKeyboardKey.keyJ,
+                ): const _SyncToggleIntent(),
               },
               child: Actions(
                 actions: {
@@ -384,9 +404,7 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
-        border: Border(
-          bottom: BorderSide(color: theme.dividerColor),
-        ),
+        border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
       child: Row(
         children: [
@@ -436,7 +454,8 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
           const Spacer(),
           if (_isLargeFile) ...[
             Tooltip(
-              message: 'Large file — syntax highlighting and autocomplete '
+              message:
+                  'Large file — syntax highlighting and autocomplete '
                   'disabled to keep the editor responsive.',
               child: Chip(
                 label: const Text('Plain (large file)'),
@@ -478,13 +497,15 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
     // editor's normal interactions.
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
-      onSecondaryTapDown: (details) => _showSyncContextMenu(details.globalPosition),
+      onSecondaryTapDown: (details) =>
+          _showSyncContextMenu(details.globalPosition),
       child: _buildEditor(theme, isDarkMode),
     );
   }
 
   Future<void> _showSyncContextMenu(Offset globalPosition) async {
-    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
+    final overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox?;
     if (overlay == null) return;
     final continuous = _sync.continuousEnabled.value;
     final selected = await showMenu<String>(
@@ -510,9 +531,9 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
             dense: true,
             contentPadding: EdgeInsets.zero,
             leading: Icon(continuous ? Icons.link_off : Icons.link, size: 18),
-            title: Text(continuous
-                ? 'Stop following caret'
-                : 'Continuously follow caret'),
+            title: Text(
+              continuous ? 'Stop following caret' : 'Continuously follow caret',
+            ),
             subtitle: const Text('Ctrl+Alt+J'),
           ),
         ),
@@ -578,10 +599,12 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
       await ref.read(projectTreeProvider.notifier).refresh();
 
       if (!mounted) return;
-      _showSnack(result.includeUpdated
-          ? 'Split into "${p.basename(result.newFilePath)}".'
-          : 'Created "${p.basename(result.newFilePath)}" — add its #include to '
-              'main.typ manually (the original include was not found).');
+      _showSnack(
+        result.includeUpdated
+            ? 'Split into "${p.basename(result.newFilePath)}".'
+            : 'Created "${p.basename(result.newFilePath)}" — add its #include to '
+                  'main.typ manually (the original include was not found).',
+      );
     } catch (e) {
       if (mounted) {
         _showSnack(e is ArgumentError ? '${e.message}' : 'Split failed: $e');
@@ -724,7 +747,9 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
   void _handleSave() async {
     // Find the tab index for this file
     final editorState = ref.read(editorProvider);
-    final tabIndex = editorState.tabs.indexWhere((tab) => tab.filePath == widget.filePath);
+    final tabIndex = editorState.tabs.indexWhere(
+      (tab) => tab.filePath == widget.filePath,
+    );
 
     if (tabIndex == -1) {
       return;
@@ -743,10 +768,7 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
     String? selectedText;
 
     if (selection.start != selection.end) {
-      selectedText = _controller.text.substring(
-        selection.start,
-        selection.end,
-      );
+      selectedText = _controller.text.substring(selection.start, selection.end);
     }
 
     // Show search bar with selected text (if any)
@@ -785,7 +807,8 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
       if (searchState.wholeWord) {
         final isStartWord = index == 0 || !_isWordChar(text[index - 1]);
         final endIndex = index + query.length;
-        final isEndWord = endIndex >= text.length || !_isWordChar(text[endIndex]);
+        final isEndWord =
+            endIndex >= text.length || !_isWordChar(text[endIndex]);
 
         if (isStartWord && isEndWord) {
           matches.add(index);
@@ -798,10 +821,9 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
     }
 
     // Update match count
-    ref.read(searchProvider.notifier).setMatches(
-      matches.isNotEmpty ? 0 : 0,
-      matches.length,
-    );
+    ref
+        .read(searchProvider.notifier)
+        .setMatches(matches.isNotEmpty ? 0 : 0, matches.length);
 
     // Navigate to first match if available
     if (matches.isNotEmpty) {
@@ -868,10 +890,7 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
                 _getIconForSuggestionType(suggestion.type.name),
                 size: 16,
               ),
-              title: Text(
-                suggestion.label,
-                style: theme.textTheme.bodySmall,
-              ),
+              title: Text(suggestion.label, style: theme.textTheme.bodySmall),
               subtitle: suggestion.detail != null
                   ? Text(
                       suggestion.detail!,
@@ -908,7 +927,8 @@ class _HighlightedCodeEditorState extends ConsumerState<HighlightedCodeEditor> {
     final currentText = _controller.text;
 
     // Create new text with suggestion inserted
-    final newText = currentText.substring(0, cursorPos) +
+    final newText =
+        currentText.substring(0, cursorPos) +
         suggestion.insertText +
         currentText.substring(cursorPos);
 

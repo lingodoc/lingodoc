@@ -32,9 +32,7 @@ class SyncMap {
 
   /// Build from [anchors] (any order). Filters out malformed entries.
   factory SyncMap(List<SyncAnchor> anchors) {
-    final list = anchors
-        .where((a) => a.line > 0 && a.page > 0)
-        .toList()
+    final list = anchors.where((a) => a.line > 0 && a.page > 0).toList()
       ..sort((a, b) => a.page != b.page ? a.page - b.page : a.y.compareTo(b.y));
     return SyncMap._(list);
   }

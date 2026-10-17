@@ -9,7 +9,7 @@ part 'project_config.g.dart';
 /// Root configuration model for a LingoDoc project.
 @freezed
 sealed class ProjectConfig with _$ProjectConfig {
-  const ProjectConfig._();  // Private constructor for Freezed
+  const ProjectConfig._(); // Private constructor for Freezed
 
   const factory ProjectConfig({
     required List<LanguageConfig> languages,

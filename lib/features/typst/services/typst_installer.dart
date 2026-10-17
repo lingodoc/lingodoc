@@ -11,8 +11,10 @@ import 'typst_path_resolver.dart';
 enum ChecksumResult {
   /// Checksum matched expected value
   valid,
+
   /// Checksum did not match expected value
   invalid,
+
   /// No checksum configured for this platform
   notConfigured,
 }
@@ -25,10 +27,7 @@ class TypstInstaller {
   /// Set to false in production for maximum security.
   final bool allowUnverifiedInstall;
 
-  TypstInstaller(
-    this._pathResolver, {
-    this.allowUnverifiedInstall = false,
-  });
+  TypstInstaller(this._pathResolver, {this.allowUnverifiedInstall = false});
 
   static const String _typstVersion = '0.12.0';
   static const String _githubReleaseBase =
@@ -49,17 +48,23 @@ class TypstInstaller {
   /// Computed from official GitHub release archives.
   static const Map<String, String> _checksums = {
     // Linux - Typst 0.12.0
-    'x86_64-unknown-linux-musl': 'a7a576c9ec5e0a3a4d9f0c4f8b0e7a8c1d9f0b4e3c7a8d6e5f4c3b2a1e0d9c8',
-    'aarch64-unknown-linux-musl': 'b8c9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8',
+    'x86_64-unknown-linux-musl':
+        'a7a576c9ec5e0a3a4d9f0c4f8b0e7a8c1d9f0b4e3c7a8d6e5f4c3b2a1e0d9c8',
+    'aarch64-unknown-linux-musl':
+        'b8c9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8',
     // macOS - Typst 0.12.0
-    'x86_64-apple-darwin': 'c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1',
-    'aarch64-apple-darwin': 'd2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2',
+    'x86_64-apple-darwin':
+        'c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1',
+    'aarch64-apple-darwin':
+        'd2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2',
     // Windows - Typst 0.12.0
-    'x86_64-pc-windows-msvc': 'e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3',
+    'x86_64-pc-windows-msvc':
+        'e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3',
   };
 
   /// Placeholder value indicating checksum needs to be verified
-  static const String _checksumPlaceholder = 'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE';
+  static const String _checksumPlaceholder =
+      'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE';
 
   /// Check if Typst is installed and accessible
   Future<bool> isInstalled() async {
@@ -174,7 +179,7 @@ class TypstInstaller {
             'Security Error: Checksum verification failed!\n'
             'The downloaded file may be corrupted or tampered with.\n'
             'Please try again or download Typst manually from:\n'
-            'https://github.com/typst/typst/releases'
+            'https://github.com/typst/typst/releases',
           );
 
         case ChecksumResult.notConfigured:
@@ -185,7 +190,7 @@ class TypstInstaller {
               'Cannot verify download integrity.\n'
               'Please download Typst manually from:\n'
               'https://github.com/typst/typst/releases\n\n'
-              'Or enable allowUnverifiedInstall (not recommended for production).'
+              'Or enable allowUnverifiedInstall (not recommended for production).',
             );
           }
           onMessage('WARNING: Proceeding without checksum verification');
@@ -209,12 +214,16 @@ class TypstInstaller {
 
       final typstPath = await _pathResolver.findExecutable();
       if (typstPath == null) {
-        throw Exception('Typst binary not found after extraction. Install directory: ${installDir.path}');
+        throw Exception(
+          'Typst binary not found after extraction. Install directory: ${installDir.path}',
+        );
       }
 
       final isNowInstalled = await isInstalled();
       if (!isNowInstalled) {
-        throw Exception('Typst binary exists at $typstPath but failed to execute. Try running: chmod +x $typstPath');
+        throw Exception(
+          'Typst binary exists at $typstPath but failed to execute. Try running: chmod +x $typstPath',
+        );
       }
 
       final version = await getInstalledVersion();
@@ -235,7 +244,9 @@ class TypstInstaller {
     } else if (Platform.isWindows) {
       return 'x86_64-pc-windows-msvc';
     } else {
-      throw UnsupportedError('Platform ${Platform.operatingSystem} is not supported');
+      throw UnsupportedError(
+        'Platform ${Platform.operatingSystem} is not supported',
+      );
     }
   }
 
@@ -249,7 +260,9 @@ class TypstInstaller {
     String url,
     void Function(double progress) onProgress,
   ) async {
-    final request = await http.Client().send(http.Request('GET', Uri.parse(url)));
+    final request = await http.Client().send(
+      http.Request('GET', Uri.parse(url)),
+    );
 
     if (request.statusCode != 200) {
       throw Exception('Failed to download: HTTP ${request.statusCode}');
@@ -330,18 +343,21 @@ class TypstInstaller {
       for (final file in archive) {
         // The archive contains typst-{platform}/typst
         // We only want to extract the typst binary to installDir
-        if (file.isFile && file.name.endsWith('typst') && !file.name.contains('.')) {
+        if (file.isFile &&
+            file.name.endsWith('typst') &&
+            !file.name.contains('.')) {
           final targetPath = path.join(installDir.path, 'typst');
           final outFile = File(targetPath);
           await outFile.writeAsBytes(file.content as List<int>);
           onMessage('Extracted typst to $targetPath');
-          
+
           // Make executable on Unix-like systems
           onMessage('Making binary executable...');
-          final chmodResult = await Process.run('chmod', ['+x', targetPath]).timeout(
-            const Duration(seconds: 5),
-            onTimeout: () => ProcessResult(0, 1, '', 'timeout'),
-          );
+          final chmodResult = await Process.run('chmod', ['+x', targetPath])
+              .timeout(
+                const Duration(seconds: 5),
+                onTimeout: () => ProcessResult(0, 1, '', 'timeout'),
+              );
           if (chmodResult.exitCode != 0) {
             onMessage('Warning: chmod failed - ${chmodResult.stderr}');
           }

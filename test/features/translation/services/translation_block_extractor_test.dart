@@ -6,8 +6,10 @@ void main() {
   const codes = ['en', 'es', 'fr', 'nl', 'de'];
 
   group('TranslationBlockExtractor', () {
-    test('extracts multi-language paragraph blocks with ids and start lines', () {
-      const src = '''
+    test(
+      'extracts multi-language paragraph blocks with ids and start lines',
+      () {
+        const src = '''
 #import "../lang.typ": current-lang
 
 // ===== Paragraph 1 =====
@@ -25,19 +27,20 @@ void main() {
 )
 #para-002.at(current-lang)
 ''';
-      final blocks = extractor.extract(src, codes);
+        final blocks = extractor.extract(src, codes);
 
-      expect(blocks.length, 2);
-      expect(blocks[0].blockId, 'para-001');
-      expect(blocks[0].values.keys.toSet(), {'en', 'es', 'fr'});
-      expect(blocks[0].values['en'], 'Hello world');
-      expect(blocks[0].values['fr'], 'Bonjour le monde');
-      // startLine is the 0-based `#let` line.
-      expect(blocks[0].startLine, 3);
+        expect(blocks.length, 2);
+        expect(blocks[0].blockId, 'para-001');
+        expect(blocks[0].values.keys.toSet(), {'en', 'es', 'fr'});
+        expect(blocks[0].values['en'], 'Hello world');
+        expect(blocks[0].values['fr'], 'Bonjour le monde');
+        // startLine is the 0-based `#let` line.
+        expect(blocks[0].startLine, 3);
 
-      expect(blocks[1].blockId, 'para-002');
-      expect(blocks[1].values.keys.toSet(), {'en', 'nl'});
-    });
+        expect(blocks[1].blockId, 'para-002');
+        expect(blocks[1].values.keys.toSet(), {'en', 'nl'});
+      },
+    );
 
     test('handles nested brackets and multiline values', () {
       const src = '''
@@ -64,23 +67,28 @@ void main() {
       expect(en.trimRight().endsWith(']'), isFalse);
     });
 
-    test('does not mistake text inside a value for another language opener', () {
-      // The English body literally contains "es: [" — must not be parsed as a
-      // Spanish opener.
-      const src = '''
+    test(
+      'does not mistake text inside a value for another language opener',
+      () {
+        // The English body literally contains "es: [" — must not be parsed as a
+        // Spanish opener.
+        const src = '''
 #let para-001 = (
   en: [Use the syntax es: [something] in code.],
   es: [Spanish text],
 )
 #para-001.at(current-lang)
 ''';
-      final blocks = extractor.extract(src, codes);
-      expect(blocks.single.values['es'], 'Spanish text');
-      expect(blocks.single.values['en']!.contains('es: [something]'), isTrue);
-    });
+        final blocks = extractor.extract(src, codes);
+        expect(blocks.single.values['es'], 'Spanish text');
+        expect(blocks.single.values['en']!.contains('es: [something]'), isTrue);
+      },
+    );
 
-    test('ignores non-dict #let units and units with no configured languages', () {
-      const src = '''
+    test(
+      'ignores non-dict #let units and units with no configured languages',
+      () {
+        const src = '''
 #let title = [Just content]
 #let helper(x) = x + 1
 #let other = (
@@ -91,10 +99,11 @@ void main() {
   en: [real],
 )
 ''';
-      final blocks = extractor.extract(src, codes);
-      expect(blocks.length, 1);
-      expect(blocks.single.blockId, 'para-001');
-    });
+        final blocks = extractor.extract(src, codes);
+        expect(blocks.length, 1);
+        expect(blocks.single.blockId, 'para-001');
+      },
+    );
 
     test('normalizes trailing whitespace and outer blank lines', () {
       const src = '''

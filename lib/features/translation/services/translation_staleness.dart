@@ -112,16 +112,18 @@ Map<String, int> staleCountsByLang(TranslationFileState? file) {
 
 /// All stale `(blockId, lang)` pairs in [file], in a stable sorted order.
 List<({String blockId, String lang})> staleBlocksForFile(
-    TranslationFileState? file) {
+  TranslationFileState? file,
+) {
   final out = <({String blockId, String lang})>[];
   if (file == null) return out;
   final ids = file.blocks.keys.toList()..sort();
   for (final id in ids) {
     final block = file.blocks[id]!;
-    final langs = block.langs.keys
-        .where((l) => block.langs[l]!.token != block.latestToken)
-        .toList()
-      ..sort();
+    final langs =
+        block.langs.keys
+            .where((l) => block.langs[l]!.token != block.latestToken)
+            .toList()
+          ..sort();
     for (final l in langs) {
       out.add((blockId: id, lang: l));
     }
@@ -136,7 +138,10 @@ int totalStaleForFile(TranslationFileState? file) =>
 /// Reconcile a single translation: reset its token to the block's reference so
 /// it is no longer stale, without changing content.
 TranslationFileState markReviewed(
-    TranslationFileState file, String blockId, String lang) {
+  TranslationFileState file,
+  String blockId,
+  String lang,
+) {
   final block = file.blocks[blockId];
   if (block == null) return file;
   final l = block.langs[lang];

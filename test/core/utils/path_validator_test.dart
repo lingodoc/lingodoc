@@ -16,15 +16,18 @@ void main() {
     });
 
     test('accepts region-suffixed codes', () {
-      expect(() => PathValidator.validateLanguageCode('en-US'), returnsNormally);
-      expect(() => PathValidator.validateLanguageCode('zh-CN'), returnsNormally);
+      expect(
+        () => PathValidator.validateLanguageCode('en-US'),
+        returnsNormally,
+      );
+      expect(
+        () => PathValidator.validateLanguageCode('zh-CN'),
+        returnsNormally,
+      );
     });
 
     test('rejects empty string', () {
-      expect(
-        () => PathValidator.validateLanguageCode(''),
-        throwsArgumentError,
-      );
+      expect(() => PathValidator.validateLanguageCode(''), throwsArgumentError);
     });
 
     test('rejects path traversal attempt', () {
@@ -58,10 +61,7 @@ void main() {
     });
 
     test('exact match returns true', () {
-      expect(
-        PathValidator.isWithinBoundary('/project', '/project'),
-        isTrue,
-      );
+      expect(PathValidator.isWithinBoundary('/project', '/project'), isTrue);
     });
 
     test('path that escapes via ../ returns false', () {
@@ -81,7 +81,10 @@ void main() {
 
   group('PathValidator.sanitizeWithBoundary', () {
     test('relative path resolves to absolute inside boundary', () {
-      final result = PathValidator.sanitizeWithBoundary('src/file.typ', '/project');
+      final result = PathValidator.sanitizeWithBoundary(
+        'src/file.typ',
+        '/project',
+      );
       expect(result, equals(p.normalize('/project/src/file.typ')));
     });
 
@@ -93,14 +96,20 @@ void main() {
     });
 
     test('absolute path inside boundary is returned normalized', () {
-      final result = PathValidator.sanitizeWithBoundary('/project/src/file.typ', '/project');
+      final result = PathValidator.sanitizeWithBoundary(
+        '/project/src/file.typ',
+        '/project',
+      );
       expect(result, equals(p.normalize('/project/src/file.typ')));
     });
   });
 
   group('PathValidator.validateFilename', () {
     test('plain filename passes', () {
-      expect(() => PathValidator.validateFilename('chapter-01.typ'), returnsNormally);
+      expect(
+        () => PathValidator.validateFilename('chapter-01.typ'),
+        returnsNormally,
+      );
       expect(() => PathValidator.validateFilename('file.txt'), returnsNormally);
     });
 
@@ -109,11 +118,17 @@ void main() {
     });
 
     test('forward slash throws', () {
-      expect(() => PathValidator.validateFilename('a/b.txt'), throwsArgumentError);
+      expect(
+        () => PathValidator.validateFilename('a/b.txt'),
+        throwsArgumentError,
+      );
     });
 
     test('backslash throws', () {
-      expect(() => PathValidator.validateFilename('a\\b.txt'), throwsArgumentError);
+      expect(
+        () => PathValidator.validateFilename('a\\b.txt'),
+        throwsArgumentError,
+      );
     });
 
     test('double-dot throws', () {
@@ -121,7 +136,10 @@ void main() {
     });
 
     test('null byte throws', () {
-      expect(() => PathValidator.validateFilename('file\x00.txt'), throwsArgumentError);
+      expect(
+        () => PathValidator.validateFilename('file\x00.txt'),
+        throwsArgumentError,
+      );
     });
   });
 

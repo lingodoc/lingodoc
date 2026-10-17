@@ -9,8 +9,8 @@ import '../../project/services/project_state.dart';
 /// Provider for detachable window state
 final detachableWindowProvider =
     NotifierProvider<DetachableWindowNotifier, DetachableWindowState>(() {
-  return DetachableWindowNotifier();
-});
+      return DetachableWindowNotifier();
+    });
 
 /// Notifier for managing detachable window state and lifecycle
 class DetachableWindowNotifier extends Notifier<DetachableWindowState> {
@@ -112,13 +112,15 @@ class DetachableWindowService {
       final windowState = ref.read(detachableWindowProvider);
 
       // Create new window using desktop_multi_window with project path
-      final window = await DesktopMultiWindow.createWindow(jsonEncode({
-        'args1': 'DetachedPreview',
-        'projectPath': projectPath,
-        'selectedLanguage': windowState.selectedLanguage,
-        'pdfPath': windowState.pdfPath,
-        'isGridMode': windowState.isGridMode,
-      }));
+      final window = await DesktopMultiWindow.createWindow(
+        jsonEncode({
+          'args1': 'DetachedPreview',
+          'projectPath': projectPath,
+          'selectedLanguage': windowState.selectedLanguage,
+          'pdfPath': windowState.pdfPath,
+          'isGridMode': windowState.isGridMode,
+        }),
+      );
 
       _detachedWindowId = window.windowId;
 

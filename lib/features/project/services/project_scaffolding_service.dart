@@ -112,7 +112,9 @@ class ProjectScaffoldingService {
     buffer.writeln();
 
     // Write view_mode
-    buffer.writeln('# View mode: "SideBySide2", "SideBySide3", "Sequential", "PreviewOnly"');
+    buffer.writeln(
+      '# View mode: "SideBySide2", "SideBySide3", "Sequential", "PreviewOnly"',
+    );
     buffer.writeln('view_mode = "Sequential"');
     buffer.writeln();
 
@@ -138,17 +140,26 @@ class ProjectScaffoldingService {
   }
 
   /// Generates the main.typ file
-  Future<void> _generateMainTypFile(String projectPath, String projectName) async {
+  Future<void> _generateMainTypFile(
+    String projectPath,
+    String projectName,
+  ) async {
     final buffer = StringBuffer();
     buffer.writeln('// main.typ');
     buffer.writeln('// Main document file that includes all chapters');
     buffer.writeln();
-    buffer.writeln('// Import language configuration (modified by LingoDoc at compile time)');
+    buffer.writeln(
+      '// Import language configuration (modified by LingoDoc at compile time)',
+    );
     buffer.writeln('#import "lang.typ": current-lang');
     buffer.writeln();
     buffer.writeln('// Import project terms (if exists)');
-    buffer.writeln('// Copy terms.typ.example to terms.typ and customize for your project');
-    buffer.writeln('#import "terms.typ": term, terms, term-code, term-bold, term-italic');
+    buffer.writeln(
+      '// Copy terms.typ.example to terms.typ and customize for your project',
+    );
+    buffer.writeln(
+      '#import "terms.typ": term, terms, term-code, term-bold, term-italic',
+    );
     buffer.writeln();
     buffer.writeln('// Document metadata');
     buffer.writeln('#set document(');
@@ -204,11 +215,16 @@ class ProjectScaffoldingService {
   }
 
   /// Generates the lang.typ file
-  Future<void> _generateLangTypFile(String projectPath, String defaultLangCode) async {
+  Future<void> _generateLangTypFile(
+    String projectPath,
+    String defaultLangCode,
+  ) async {
     final buffer = StringBuffer();
     buffer.writeln('// lang.typ - Language configuration');
     buffer.writeln('// This file is modified by LingoDoc at compile time');
-    buffer.writeln('// Do not edit manually - changes will be overwritten during compilation');
+    buffer.writeln(
+      '// Do not edit manually - changes will be overwritten during compilation',
+    );
     buffer.writeln('#let current-lang = "$defaultLangCode"');
     buffer.writeln();
 
@@ -303,9 +319,12 @@ Thumbs.db
     String projectName,
     List<LanguageConfig> languages,
   ) async {
-    final languageList = languages.map((l) => '- ${l.name} (${l.code})').join('\n');
+    final languageList = languages
+        .map((l) => '- ${l.name} (${l.code})')
+        .join('\n');
 
-    final readme = '''# $projectName
+    final readme =
+        '''# $projectName
 
 A multilingual documentation project created with LingoDoc.
 
@@ -413,10 +432,14 @@ PDFs are automatically compiled when you make changes. Find them in the `output/
 
     buffer.writeln(')');
     buffer.writeln();
-    buffer.writeln('#lang-content.at(current-lang, default: lang-content.${languages.first.code})');
+    buffer.writeln(
+      '#lang-content.at(current-lang, default: lang-content.${languages.first.code})',
+    );
     buffer.writeln();
 
-    final chapterFile = File(path.join(projectPath, 'chapters', '01-introduction.typ'));
+    final chapterFile = File(
+      path.join(projectPath, 'chapters', '01-introduction.typ'),
+    );
     await chapterFile.writeAsString(buffer.toString());
 
     // Update main.typ to include the chapter

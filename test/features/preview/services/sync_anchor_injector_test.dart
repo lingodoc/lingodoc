@@ -10,34 +10,37 @@ void main() {
     return re.allMatches(text).map((m) => int.parse(m.group(1)!)).toList();
   }
 
-  test('marks heading and paragraph starts inside the active language block', () {
-    final src = [
-      '#let c = (', // 1
-      '  en: [', // 2 (opener)
-      '    = Intro', // 3 heading → marked
-      '', // 4
-      '    Hello world.', // 5 paragraph → marked
-      '', // 6
-      '    == Sub', // 7 heading → marked
-      '    More text.', // 8 follows heading, no blank → NOT marked
-      '  ],', // 9 close
-      '  es: [', // 10 opener (other language)
-      '    = Intro ES', // 11 → NOT marked for en
-      '  ],', // 12
-      ')', // 13
-    ].join('\n');
+  test(
+    'marks heading and paragraph starts inside the active language block',
+    () {
+      final src = [
+        '#let c = (', // 1
+        '  en: [', // 2 (opener)
+        '    = Intro', // 3 heading → marked
+        '', // 4
+        '    Hello world.', // 5 paragraph → marked
+        '', // 6
+        '    == Sub', // 7 heading → marked
+        '    More text.', // 8 follows heading, no blank → NOT marked
+        '  ],', // 9 close
+        '  es: [', // 10 opener (other language)
+        '    = Intro ES', // 11 → NOT marked for en
+        '  ],', // 12
+        ')', // 13
+      ].join('\n');
 
-    final out = injector.inject(
-      sourceText: src,
-      languageCode: 'en',
-      chapterIndex: 0,
-    );
+      final out = injector.inject(
+        sourceText: src,
+        languageCode: 'en',
+        chapterIndex: 0,
+      );
 
-    expect(markerLines(out), [3, 5, 7]);
-    expect(out.contains('l: 11'), isFalse); // es block untouched
-    // Original content is preserved (markers are inserted, nothing removed).
-    expect(out.contains('= Intro ES'), isTrue);
-  });
+      expect(markerLines(out), [3, 5, 7]);
+      expect(out.contains('l: 11'), isFalse); // es block untouched
+      // Original content is preserved (markers are inserted, nothing removed).
+      expect(out.contains('= Intro ES'), isTrue);
+    },
+  );
 
   test('does not insert markers inside nested brackets', () {
     final src = [

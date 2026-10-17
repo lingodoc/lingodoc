@@ -13,10 +13,7 @@ import '../../translation/services/translation_state_provider.dart';
 class LanguageGrid extends ConsumerStatefulWidget {
   final ProjectConfig config;
 
-  const LanguageGrid({
-    super.key,
-    required this.config,
-  });
+  const LanguageGrid({super.key, required this.config});
 
   @override
   ConsumerState<LanguageGrid> createState() => _LanguageGridState();
@@ -32,7 +29,7 @@ class _LanguageGridState extends ConsumerState<LanguageGrid> {
   // Track compilation state
   bool _isCompiling = false;
   int _compilingCount = 0;
-  
+
   // Synchronized scrolling state
   final ValueNotifier<Matrix4?> _sharedMatrixNotifier = ValueNotifier(null);
   String? _currentScrollingLanguage;
@@ -46,7 +43,7 @@ class _LanguageGridState extends ConsumerState<LanguageGrid> {
       _selectedLanguages[lang.code] = true;
     }
   }
-  
+
   @override
   void dispose() {
     _sharedMatrixNotifier.dispose();
@@ -94,9 +91,7 @@ class _LanguageGridState extends ConsumerState<LanguageGrid> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
-        border: Border(
-          bottom: BorderSide(color: theme.dividerColor),
-        ),
+        border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
       child: Row(
         children: [
@@ -129,14 +124,14 @@ class _LanguageGridState extends ConsumerState<LanguageGrid> {
                 ? const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                    ),
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.play_arrow, size: 18),
-            label: Text(_isCompiling
-                ? 'Compiling ($_compilingCount/${selectedLangs.length})...'
-                : 'Compile All'),
+            label: Text(
+              _isCompiling
+                  ? 'Compiling ($_compilingCount/${selectedLangs.length})...'
+                  : 'Compile All',
+            ),
           ),
         ],
       ),
@@ -144,11 +139,17 @@ class _LanguageGridState extends ConsumerState<LanguageGrid> {
   }
 
   Widget _buildGrid(
-      ThemeData theme, List<String> selectedLangs, Set<String> staleLangs) {
+    ThemeData theme,
+    List<String> selectedLangs,
+    Set<String> staleLangs,
+  ) {
     // Determine grid columns based on selected language count
-    final columnCount = selectedLangs.length <= 1 ? 1
-        : selectedLangs.length == 2 ? 2
-        : selectedLangs.length == 3 ? 3
+    final columnCount = selectedLangs.length <= 1
+        ? 1
+        : selectedLangs.length == 2
+        ? 2
+        : selectedLangs.length == 3
+        ? 3
         : 2; // For 4+ languages, use 2 columns
 
     return GridView.builder(
@@ -213,7 +214,8 @@ class _LanguageGridState extends ConsumerState<LanguageGrid> {
                   currentScrollingLanguage: _currentScrollingLanguage,
                   onMatrixChanged: (matrix) {
                     // Only update if this viewer is the one being scrolled
-                    if (_currentScrollingLanguage == null || _currentScrollingLanguage == langCode) {
+                    if (_currentScrollingLanguage == null ||
+                        _currentScrollingLanguage == langCode) {
                       _currentScrollingLanguage = langCode;
                       _sharedMatrixNotifier.value = matrix;
                       // Reset after a short delay to allow other viewers to catch up

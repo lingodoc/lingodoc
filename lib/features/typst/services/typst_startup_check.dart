@@ -14,11 +14,7 @@ class TypstStatus {
     this.isChecking = false,
   });
 
-  TypstStatus copyWith({
-    bool? isInstalled,
-    String? version,
-    bool? isChecking,
-  }) {
+  TypstStatus copyWith({bool? isInstalled, String? version, bool? isChecking}) {
     return TypstStatus(
       isInstalled: isInstalled ?? this.isInstalled,
       version: version ?? this.version,

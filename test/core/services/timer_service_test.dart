@@ -16,7 +16,10 @@ void main() {
 
     test('register stores the interval', () {
       service.register('t2', const Duration(milliseconds: 500), () {});
-      expect(service.getInterval('t2'), equals(const Duration(milliseconds: 500)));
+      expect(
+        service.getInterval('t2'),
+        equals(const Duration(milliseconds: 500)),
+      );
     });
 
     test('registering the same ID twice replaces the timer', () {

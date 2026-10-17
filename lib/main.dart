@@ -48,12 +48,7 @@ void main(List<String> args) async {
   // Create provider container for message handling
   final container = ProviderContainer();
 
-  runApp(
-    UncontrolledProviderScope(
-      container: container,
-      child: LingoDocApp(),
-    ),
-  );
+  runApp(UncontrolledProviderScope(container: container, child: LingoDocApp()));
 
   // Store container reference for message handling
   _globalContainer = container;

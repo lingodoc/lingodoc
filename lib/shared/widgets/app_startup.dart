@@ -53,11 +53,7 @@ class _AppStartupState extends ConsumerState<AppStartup> {
       });
 
       // Show placeholder while dialog is being shown
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     // Show main layout if Typst is installed
@@ -81,10 +77,7 @@ class _AppStartupState extends ConsumerState<AppStartup> {
               const SizedBox(height: 24),
               const Text(
                 'Typst Compiler Required',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               const Text(

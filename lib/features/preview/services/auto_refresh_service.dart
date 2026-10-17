@@ -27,7 +27,7 @@ class AutoRefreshService {
   String? _projectPath;
   String? _languageCode;
   String? _outputDir;
-  
+
   // Track last modification time of source files to avoid unnecessary compilation
   DateTime? _lastSourceModTime;
 
@@ -55,7 +55,10 @@ class AutoRefreshService {
   void _startPeriodicTimer() {
     _cancelTimers();
 
-    if (!_isEnabled || _projectPath == null || _languageCode == null || _periodicCallback == null) {
+    if (!_isEnabled ||
+        _projectPath == null ||
+        _languageCode == null ||
+        _periodicCallback == null) {
       return;
     }
 
@@ -63,7 +66,10 @@ class AutoRefreshService {
       // Guard against execution after disposal
       if (_isDisposed) return;
 
-      if (!_isEnabled || _projectPath == null || _languageCode == null || _periodicCallback == null) {
+      if (!_isEnabled ||
+          _projectPath == null ||
+          _languageCode == null ||
+          _periodicCallback == null) {
         return;
       }
 
@@ -155,7 +161,8 @@ class AutoRefreshService {
 
       // If no previous check or files were modified, return the latest mod time
       if (_lastSourceModTime == null ||
-          (latestModTime != null && latestModTime.isAfter(_lastSourceModTime!))) {
+          (latestModTime != null &&
+              latestModTime.isAfter(_lastSourceModTime!))) {
         return latestModTime;
       }
 
@@ -180,7 +187,7 @@ class AutoRefreshService {
     _languageCode = languageCode;
     _outputDir = outputDir;
     _periodicCallback = onComplete;
-    
+
     // Reset last source mod time when configuration changes
     _lastSourceModTime = null;
 
@@ -199,7 +206,7 @@ class AutoRefreshService {
     String? outputDir,
   }) async {
     _cancelTimers();
-    
+
     // Reset last source mod time to force next periodic check
     _lastSourceModTime = null;
 
@@ -303,10 +310,7 @@ class AutoRefreshNotifier extends Notifier<AutoRefreshState> {
 
   /// Set error message
   void setError(String message) {
-    state = state.copyWith(
-      errorMessage: message,
-      isRefreshing: false,
-    );
+    state = state.copyWith(errorMessage: message, isRefreshing: false);
   }
 
   /// Clear error
@@ -316,6 +320,7 @@ class AutoRefreshNotifier extends Notifier<AutoRefreshState> {
 }
 
 /// Provider for auto-refresh state
-final autoRefreshProvider = NotifierProvider<AutoRefreshNotifier, AutoRefreshState>(() {
-  return AutoRefreshNotifier();
-});
+final autoRefreshProvider =
+    NotifierProvider<AutoRefreshNotifier, AutoRefreshState>(() {
+      return AutoRefreshNotifier();
+    });

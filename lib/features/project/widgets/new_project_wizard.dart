@@ -133,8 +133,8 @@ class _NewProjectWizardState extends State<NewProjectWizard> {
               Text(
                 'Project folder: ${p.join(_projectPath, _projectName)}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ],
@@ -331,7 +331,10 @@ class _NewProjectWizardState extends State<NewProjectWizard> {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 12),
-                  _buildSummaryRow('Name:', _projectName.isEmpty ? '-' : _projectName),
+                  _buildSummaryRow(
+                    'Name:',
+                    _projectName.isEmpty ? '-' : _projectName,
+                  ),
                   _buildSummaryRow(
                     'Folder:',
                     (_projectPath.isEmpty || _projectName.isEmpty)
@@ -344,10 +347,7 @@ class _NewProjectWizardState extends State<NewProjectWizard> {
                         ? '-'
                         : _selectedLanguages.map((l) => l.name).join(', '),
                   ),
-                  _buildSummaryRow(
-                    'Default:',
-                    _defaultLanguage?.name ?? '-',
-                  ),
+                  _buildSummaryRow('Default:', _defaultLanguage?.name ?? '-'),
                   _buildSummaryRow(
                     'Sample chapter:',
                     _createSampleChapter ? 'Yes' : 'No',

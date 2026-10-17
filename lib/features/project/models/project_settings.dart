@@ -7,7 +7,7 @@ part 'project_settings.g.dart';
 /// Project-specific settings.
 @freezed
 sealed class ProjectSettings with _$ProjectSettings {
-  const ProjectSettings._();  // Private constructor for Freezed
+  const ProjectSettings._(); // Private constructor for Freezed
 
   const factory ProjectSettings({
     required LanguageConfig defaultLanguage,

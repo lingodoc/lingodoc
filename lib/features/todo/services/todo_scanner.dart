@@ -25,8 +25,10 @@ class TodoScanner {
   /// project's configured languages, used to attribute markers to a language.
   List<TodoItem> scan(String fileText, List<String> languageCodes) {
     final lines = fileText.split('\n');
-    final spans =
-        const TranslationBlockExtractor().extractSpans(fileText, languageCodes);
+    final spans = const TranslationBlockExtractor().extractSpans(
+      fileText,
+      languageCodes,
+    );
 
     final todos = <TodoItem>[];
     for (var i = 0; i < lines.length; i++) {
@@ -42,13 +44,15 @@ class TodoScanner {
         }
       }
 
-      todos.add(TodoItem(
-        line: i + 1, // 1-based for editor navigation
-        message: (m.group(2) ?? '').trim(),
-        user: m.group(1),
-        blockId: enclosing?.blockId,
-        lang: enclosing?.lang,
-      ));
+      todos.add(
+        TodoItem(
+          line: i + 1, // 1-based for editor navigation
+          message: (m.group(2) ?? '').trim(),
+          user: m.group(1),
+          blockId: enclosing?.blockId,
+          lang: enclosing?.lang,
+        ),
+      );
     }
     return todos;
   }

@@ -18,9 +18,7 @@ class ProjectTree extends ConsumerWidget {
     final projectState = ref.watch(projectTreeProvider);
 
     if (projectState.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (projectState.error != null) {
@@ -32,10 +30,7 @@ class ProjectTree extends ConsumerWidget {
             children: [
               const Icon(Icons.error_outline, size: 48, color: Colors.red),
               const SizedBox(height: 16),
-              Text(
-                'Error',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              Text('Error', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
               Text(
                 projectState.error!,
@@ -59,9 +54,9 @@ class ProjectTree extends ConsumerWidget {
               const SizedBox(height: 16),
               Text(
                 'No project open',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.grey,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(color: Colors.grey),
               ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
@@ -86,9 +81,9 @@ class ProjectTree extends ConsumerWidget {
               const SizedBox(height: 16),
               Text(
                 'Empty project',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.grey,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(color: Colors.grey),
               ),
             ],
           ),
@@ -98,7 +93,12 @@ class ProjectTree extends ConsumerWidget {
 
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      children: _buildTreeNodes(context, ref, projectState.nodes, projectState.selectedFilePath),
+      children: _buildTreeNodes(
+        context,
+        ref,
+        projectState.nodes,
+        projectState.selectedFilePath,
+      ),
     );
   }
 
@@ -111,13 +111,15 @@ class ProjectTree extends ConsumerWidget {
     final widgets = <Widget>[];
 
     for (final node in nodes) {
-      widgets.add(_TreeNodeWidget(
-        node: node,
-        isSelected: node.path == selectedPath,
-        onTap: () => _onNodeTap(ref, node),
-        onToggle: () => _onNodeToggle(ref, node),
-        onSecondaryTap: (pos) => _onNodeSecondaryTap(context, ref, node, pos),
-      ));
+      widgets.add(
+        _TreeNodeWidget(
+          node: node,
+          isSelected: node.path == selectedPath,
+          onTap: () => _onNodeTap(ref, node),
+          onToggle: () => _onNodeToggle(ref, node),
+          onSecondaryTap: (pos) => _onNodeSecondaryTap(context, ref, node, pos),
+        ),
+      );
 
       // Add children if expanded
       if (node.isExpanded && node.children.isNotEmpty) {
@@ -197,13 +199,15 @@ class ProjectTree extends ConsumerWidget {
       return;
     }
 
-    final prefix = RegExp(r'^\d+[a-z]?')
-            .firstMatch(p.basenameWithoutExtension(node.path))
-            ?.group(0) ??
+    final prefix =
+        RegExp(
+          r'^\d+[a-z]?',
+        ).firstMatch(p.basenameWithoutExtension(node.path))?.group(0) ??
         '';
     final selection = await showDialog<Map<int, String>>(
       context: context,
-      builder: (_) => ChapterSplitDialog(sections: sections, filePrefix: prefix),
+      builder: (_) =>
+          ChapterSplitDialog(sections: sections, filePrefix: prefix),
     );
     if (selection == null || selection.isEmpty) return;
 
@@ -242,15 +246,17 @@ class ProjectTree extends ConsumerWidget {
           context,
           result.includeUpdated
               ? 'Split into ${files.length} file'
-                  '${files.length == 1 ? '' : 's'}.'
+                    '${files.length == 1 ? '' : 's'}.'
               : 'Created ${files.length} files — add their #include lines to '
-                  'main.typ manually (the original include was not found).',
+                    'main.typ manually (the original include was not found).',
         );
       }
     } catch (e) {
       if (context.mounted) {
-        _snack(context,
-            e is ArgumentError ? '${e.message}' : 'Split failed: $e');
+        _snack(
+          context,
+          e is ArgumentError ? '${e.message}' : 'Split failed: $e',
+        );
       }
     }
   }
@@ -332,58 +338,59 @@ class _TreeNodeWidgetState extends State<_TreeNodeWidget> {
             ? null
             : (d) => widget.onSecondaryTap!(d.globalPosition),
         child: InkWell(
-        onTap: widget.onTap,
-        child: Container(
-          height: 32,
-          padding: EdgeInsets.only(left: indent + 8, right: 8),
-          color: widget.isSelected
-              ? Theme.of(context).colorScheme.primaryContainer
-              : _isHovered
-                  ? Theme.of(context).colorScheme.surfaceContainerHighest
-                  : Colors.transparent,
-          child: Row(
-            children: [
-              // Expand/collapse icon for directories
-              if (widget.node.isDirectory)
-                GestureDetector(
-                  onTap: widget.onToggle,
-                  child: Icon(
-                    widget.node.isExpanded
-                        ? Icons.keyboard_arrow_down
-                        : Icons.keyboard_arrow_right,
-                    size: 18,
-                  ),
-                )
-              else
-                const SizedBox(width: 18),
-              const SizedBox(width: 4),
-              // File/folder icon
-              Icon(
-                _getIcon(),
-                size: 18,
-                color: widget.isSelected
-                    ? Theme.of(context).colorScheme.onPrimaryContainer
-                    : null,
-              ),
-              const SizedBox(width: 8),
-              // File/folder name
-              Expanded(
-                child: Text(
-                  widget.node.name,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: widget.isSelected
-                            ? Theme.of(context).colorScheme.onPrimaryContainer
-                            : null,
-                        fontWeight:
-                            widget.node.isConfigFile ? FontWeight.w600 : null,
-                      ),
-                  overflow: TextOverflow.ellipsis,
+          onTap: widget.onTap,
+          child: Container(
+            height: 32,
+            padding: EdgeInsets.only(left: indent + 8, right: 8),
+            color: widget.isSelected
+                ? Theme.of(context).colorScheme.primaryContainer
+                : _isHovered
+                ? Theme.of(context).colorScheme.surfaceContainerHighest
+                : Colors.transparent,
+            child: Row(
+              children: [
+                // Expand/collapse icon for directories
+                if (widget.node.isDirectory)
+                  GestureDetector(
+                    onTap: widget.onToggle,
+                    child: Icon(
+                      widget.node.isExpanded
+                          ? Icons.keyboard_arrow_down
+                          : Icons.keyboard_arrow_right,
+                      size: 18,
+                    ),
+                  )
+                else
+                  const SizedBox(width: 18),
+                const SizedBox(width: 4),
+                // File/folder icon
+                Icon(
+                  _getIcon(),
+                  size: 18,
+                  color: widget.isSelected
+                      ? Theme.of(context).colorScheme.onPrimaryContainer
+                      : null,
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                // File/folder name
+                Expanded(
+                  child: Text(
+                    widget.node.name,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: widget.isSelected
+                          ? Theme.of(context).colorScheme.onPrimaryContainer
+                          : null,
+                      fontWeight: widget.node.isConfigFile
+                          ? FontWeight.w600
+                          : null,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }

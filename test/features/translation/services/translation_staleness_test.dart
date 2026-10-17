@@ -28,14 +28,18 @@ void main() {
     test('editing one language marks the others stale, that one fresh', () {
       final t0 = reconcileFile(
         prior: null,
-        blocks: [block('p1', {'en': 'a', 'fr': 'b', 'de': 'c'})],
+        blocks: [
+          block('p1', {'en': 'a', 'fr': 'b', 'de': 'c'}),
+        ],
         nowIso: 't0',
       );
 
       // Edit fr only.
       final t1 = reconcileFile(
         prior: t0,
-        blocks: [block('p1', {'en': 'a', 'fr': 'b-edited', 'de': 'c'})],
+        blocks: [
+          block('p1', {'en': 'a', 'fr': 'b-edited', 'de': 'c'}),
+        ],
         nowIso: 't1',
       );
       expect(staleLangs(t1, 'p1'), {'en', 'de'});
@@ -45,12 +49,16 @@ void main() {
     test('editing a different language re-stales the previously fresh one', () {
       var file = reconcileFile(
         prior: null,
-        blocks: [block('p1', {'en': 'a', 'fr': 'b', 'de': 'c'})],
+        blocks: [
+          block('p1', {'en': 'a', 'fr': 'b', 'de': 'c'}),
+        ],
         nowIso: 't0',
       );
       file = reconcileFile(
         prior: file,
-        blocks: [block('p1', {'en': 'a', 'fr': 'b2', 'de': 'c'})],
+        blocks: [
+          block('p1', {'en': 'a', 'fr': 'b2', 'de': 'c'}),
+        ],
         nowIso: 't1',
       );
       expect(staleLangs(file, 'p1'), {'en', 'de'});
@@ -58,7 +66,9 @@ void main() {
       // Now edit de.
       file = reconcileFile(
         prior: file,
-        blocks: [block('p1', {'en': 'a', 'fr': 'b2', 'de': 'c2'})],
+        blocks: [
+          block('p1', {'en': 'a', 'fr': 'b2', 'de': 'c2'}),
+        ],
         nowIso: 't2',
       );
       expect(staleLangs(file, 'p1'), {'en', 'fr'});
@@ -68,60 +78,77 @@ void main() {
     test('editing a stale translation clears its own flag', () {
       var file = reconcileFile(
         prior: null,
-        blocks: [block('p1', {'en': 'a', 'fr': 'b'})],
+        blocks: [
+          block('p1', {'en': 'a', 'fr': 'b'}),
+        ],
         nowIso: 't0',
       );
       file = reconcileFile(
         prior: file,
-        blocks: [block('p1', {'en': 'a2', 'fr': 'b'})],
+        blocks: [
+          block('p1', {'en': 'a2', 'fr': 'b'}),
+        ],
         nowIso: 't1',
       ); // fr now stale
       expect(staleLangs(file, 'p1'), {'fr'});
 
       file = reconcileFile(
         prior: file,
-        blocks: [block('p1', {'en': 'a2', 'fr': 'b2'})],
+        blocks: [
+          block('p1', {'en': 'a2', 'fr': 'b2'}),
+        ],
         nowIso: 't2',
       ); // fr edited → clears
       expect(isLangStale(file.blocks['p1']!, 'fr'), isFalse);
     });
 
-    test('new block among existing baselines in-sync; deleted block is pruned', () {
-      var file = reconcileFile(
-        prior: null,
-        blocks: [block('p1', {'en': 'a', 'fr': 'b'})],
-        nowIso: 't0',
-      );
-      // Add p2, keep p1 unchanged.
-      file = reconcileFile(
-        prior: file,
-        blocks: [
-          block('p1', {'en': 'a', 'fr': 'b'}),
-          block('p2', {'en': 'x', 'fr': 'y'}),
-        ],
-        nowIso: 't1',
-      );
-      expect(staleLangs(file, 'p2'), isEmpty);
+    test(
+      'new block among existing baselines in-sync; deleted block is pruned',
+      () {
+        var file = reconcileFile(
+          prior: null,
+          blocks: [
+            block('p1', {'en': 'a', 'fr': 'b'}),
+          ],
+          nowIso: 't0',
+        );
+        // Add p2, keep p1 unchanged.
+        file = reconcileFile(
+          prior: file,
+          blocks: [
+            block('p1', {'en': 'a', 'fr': 'b'}),
+            block('p2', {'en': 'x', 'fr': 'y'}),
+          ],
+          nowIso: 't1',
+        );
+        expect(staleLangs(file, 'p2'), isEmpty);
 
-      // Remove p1.
-      file = reconcileFile(
-        prior: file,
-        blocks: [block('p2', {'en': 'x', 'fr': 'y'})],
-        nowIso: 't2',
-      );
-      expect(file.blocks.containsKey('p1'), isFalse);
-    });
+        // Remove p1.
+        file = reconcileFile(
+          prior: file,
+          blocks: [
+            block('p2', {'en': 'x', 'fr': 'y'}),
+          ],
+          nowIso: 't2',
+        );
+        expect(file.blocks.containsKey('p1'), isFalse);
+      },
+    );
 
     test('adding/removing a language does not restale siblings', () {
       var file = reconcileFile(
         prior: null,
-        blocks: [block('p1', {'en': 'a', 'fr': 'b'})],
+        blocks: [
+          block('p1', {'en': 'a', 'fr': 'b'}),
+        ],
         nowIso: 't0',
       );
       // Add a brand-new translation; existing en/fr untouched.
       file = reconcileFile(
         prior: file,
-        blocks: [block('p1', {'en': 'a', 'fr': 'b', 'de': 'c'})],
+        blocks: [
+          block('p1', {'en': 'a', 'fr': 'b', 'de': 'c'}),
+        ],
         nowIso: 't1',
       );
       expect(staleLangs(file, 'p1'), isEmpty);
@@ -129,7 +156,9 @@ void main() {
       // Remove de again; still nothing stale.
       file = reconcileFile(
         prior: file,
-        blocks: [block('p1', {'en': 'a', 'fr': 'b'})],
+        blocks: [
+          block('p1', {'en': 'a', 'fr': 'b'}),
+        ],
         nowIso: 't2',
       );
       expect(staleLangs(file, 'p1'), isEmpty);
@@ -140,12 +169,16 @@ void main() {
     TranslationFileState staleFile() {
       final t0 = reconcileFile(
         prior: null,
-        blocks: [block('p1', {'en': 'a', 'fr': 'b', 'de': 'c'})],
+        blocks: [
+          block('p1', {'en': 'a', 'fr': 'b', 'de': 'c'}),
+        ],
         nowIso: 't0',
       );
       return reconcileFile(
         prior: t0,
-        blocks: [block('p1', {'en': 'a2', 'fr': 'b', 'de': 'c'})],
+        blocks: [
+          block('p1', {'en': 'a2', 'fr': 'b', 'de': 'c'}),
+        ],
         nowIso: 't1',
       ); // fr + de stale
     }
@@ -184,10 +217,10 @@ void main() {
 
       expect(totalStaleForFile(file), 2);
       expect(staleCountsByLang(file)['fr'], 2);
-      expect(
-        staleBlocksForFile(file),
-        [(blockId: 'p1', lang: 'fr'), (blockId: 'p2', lang: 'fr')],
-      );
+      expect(staleBlocksForFile(file), [
+        (blockId: 'p1', lang: 'fr'),
+        (blockId: 'p2', lang: 'fr'),
+      ]);
     });
   });
 }

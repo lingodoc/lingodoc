@@ -86,5 +86,5 @@ class PdfPreviewController {
 /// Provider for the PDF preview controller
 final pdfPreviewControllerProvider =
     Provider.family<PdfPreviewController, String?>((ref, languageCode) {
-  return PdfPreviewController(ref, languageCode);
-});
+      return PdfPreviewController(ref, languageCode);
+    });

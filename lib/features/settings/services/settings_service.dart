@@ -85,5 +85,5 @@ class UserPreferencesNotifier extends AsyncNotifier<UserPreferences> {
 /// Provider for user preferences with async loading.
 final userPreferencesProvider =
     AsyncNotifierProvider<UserPreferencesNotifier, UserPreferences>(
-  UserPreferencesNotifier.new,
-);
+      UserPreferencesNotifier.new,
+    );

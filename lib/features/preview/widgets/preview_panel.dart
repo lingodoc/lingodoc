@@ -202,13 +202,16 @@ class _PreviewPanelState extends ConsumerState<PreviewPanel> {
     return projectConfigAsync.when(
       data: (config) => _buildPanel(context, theme, config),
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Text('Failed to load config: $error'),
-      ),
+      error: (error, stack) =>
+          Center(child: Text('Failed to load config: $error')),
     );
   }
 
-  Widget _buildPanel(BuildContext context, ThemeData theme, ProjectConfig? config) {
+  Widget _buildPanel(
+    BuildContext context,
+    ThemeData theme,
+    ProjectConfig? config,
+  ) {
     final languages = config?.languages ?? [];
 
     // Detect project change and clear stale PDF regardless of config availability.
@@ -291,9 +294,7 @@ class _PreviewPanelState extends ConsumerState<PreviewPanel> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerHighest,
-              border: Border(
-                bottom: BorderSide(color: theme.dividerColor),
-              ),
+              border: Border(bottom: BorderSide(color: theme.dividerColor)),
             ),
             child: Row(
               children: [
@@ -344,7 +345,9 @@ class _PreviewPanelState extends ConsumerState<PreviewPanel> {
                                 : null,
                           ),
                           onPressed: () {
-                            final service = ref.read(autoRefreshServiceProvider);
+                            final service = ref.read(
+                              autoRefreshServiceProvider,
+                            );
                             if (autoRefreshState.isEnabled) {
                               // Disable auto-refresh
                               ref.read(autoRefreshProvider.notifier).disable();
@@ -361,7 +364,8 @@ class _PreviewPanelState extends ConsumerState<PreviewPanel> {
                               : 'Auto-refresh disabled',
                         ),
                         // Show status indicator when auto-refresh is active
-                        if (autoRefreshState.isEnabled && autoRefreshState.isRefreshing)
+                        if (autoRefreshState.isEnabled &&
+                            autoRefreshState.isRefreshing)
                           const SizedBox(
                             width: 12,
                             height: 12,
@@ -386,8 +390,9 @@ class _PreviewPanelState extends ConsumerState<PreviewPanel> {
 
                 // Continuous editor→PDF sync toggle
                 ValueListenableBuilder<bool>(
-                  valueListenable:
-                      ref.read(syncControllerProvider).continuousEnabled,
+                  valueListenable: ref
+                      .read(syncControllerProvider)
+                      .continuousEnabled,
                   builder: (context, enabled, _) {
                     return IconButton(
                       icon: Icon(enabled ? Icons.link : Icons.link_off),
@@ -411,7 +416,9 @@ class _PreviewPanelState extends ConsumerState<PreviewPanel> {
                       _isGridMode = !_isGridMode;
                     });
                   },
-                  tooltip: _isGridMode ? 'Single language view' : 'Multi-language grid view',
+                  tooltip: _isGridMode
+                      ? 'Single language view'
+                      : 'Multi-language grid view',
                 ),
 
                 const SizedBox(width: 8),
@@ -429,14 +436,14 @@ class _PreviewPanelState extends ConsumerState<PreviewPanel> {
 
                 // Compile button
                 FilledButton.icon(
-                  onPressed: _isCompiling ? null : () => _compileForLanguage(_selectedLanguage),
+                  onPressed: _isCompiling
+                      ? null
+                      : () => _compileForLanguage(_selectedLanguage),
                   icon: _isCompiling
                       ? const SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.play_arrow, size: 18),
                   label: Text(_isCompiling ? 'Compiling...' : 'Compile'),
@@ -468,23 +475,35 @@ class _PreviewPanelState extends ConsumerState<PreviewPanel> {
 
   /// Shown when the current project folder has no config.toml.
   Widget _buildNoConfigState(
-      BuildContext context, ThemeData theme, String? projectPath) {
+    BuildContext context,
+    ThemeData theme,
+    String? projectPath,
+  ) {
     // No project open at all — show the normal empty-preview placeholder.
     if (projectPath == null) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.picture_as_pdf_outlined,
-                size: 64, color: theme.colorScheme.onSurfaceVariant),
+            Icon(
+              Icons.picture_as_pdf_outlined,
+              size: 64,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(height: 16),
-            Text('No PDF loaded',
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            Text(
+              'No PDF loaded',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text('Compile a document to view the preview',
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            Text(
+              'Compile a document to view the preview',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
       );
@@ -497,13 +516,17 @@ class _PreviewPanelState extends ConsumerState<PreviewPanel> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.folder_off_outlined,
-                size: 64, color: theme.colorScheme.error),
+            Icon(
+              Icons.folder_off_outlined,
+              size: 64,
+              color: theme.colorScheme.error,
+            ),
             const SizedBox(height: 16),
             Text(
               'No config.toml found',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(color: theme.colorScheme.error),
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.error,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -526,7 +549,8 @@ class _PreviewPanelState extends ConsumerState<PreviewPanel> {
               'Open a folder that contains a config.toml, or create one '
               'with the "New Project" wizard.',
               style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant),
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -598,10 +622,7 @@ class _PreviewPanelState extends ConsumerState<PreviewPanel> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -623,9 +644,6 @@ class _PreviewPanelState extends ConsumerState<PreviewPanel> {
     }
 
     // Open detached window
-    detachableWindowService.openDetachedWindow(
-      context: context,
-      ref: ref,
-    );
+    detachableWindowService.openDetachedWindow(context: context, ref: ref);
   }
 }

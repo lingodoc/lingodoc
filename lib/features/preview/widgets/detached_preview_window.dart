@@ -91,57 +91,60 @@ class _DetachedPreviewWindowState extends ConsumerState<DetachedPreviewWindow> {
         }
       },
       child: Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      appBar: AppBar(
-        title: const Text('LingoDoc - Preview'),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          tooltip: 'Close detached window',
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.picture_in_picture_alt),
+        backgroundColor: theme.colorScheme.surface,
+        appBar: AppBar(
+          title: const Text('LingoDoc - Preview'),
+          leading: IconButton(
+            icon: const Icon(Icons.close),
             onPressed: () {
               Navigator.of(context).pop();
             },
-            tooltip: 'Reattach to main window',
+            tooltip: 'Close detached window',
           ),
-        ],
-      ),
-      body: _buildDetachedPreview(context, windowState),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.picture_in_picture_alt),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              tooltip: 'Reattach to main window',
+            ),
+          ],
+        ),
+        body: _buildDetachedPreview(context, windowState),
       ),
     );
   }
 
   Widget _buildDetachedPreview(
-      BuildContext context, DetachableWindowState windowState) {
+    BuildContext context,
+    DetachableWindowState windowState,
+  ) {
     final projectConfigAsync = ref.watch(projectConfigProvider);
 
     return projectConfigAsync.when(
       data: (config) => _buildPreviewContent(context, config, windowState),
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Text('Failed to load config: $error'),
-      ),
+      error: (error, stack) =>
+          Center(child: Text('Failed to load config: $error')),
     );
   }
 
-  Widget _buildPreviewContent(BuildContext context, ProjectConfig? config,
-      DetachableWindowState windowState) {
+  Widget _buildPreviewContent(
+    BuildContext context,
+    ProjectConfig? config,
+    DetachableWindowState windowState,
+  ) {
     if (config == null) {
-      return const Center(
-        child: Text('No project loaded'),
-      );
+      return const Center(child: Text('No project loaded'));
     }
 
     final theme = Theme.of(context);
     final languages = config.languages;
 
     // Get current language from window state or default to first language
-    final selectedLanguage = windowState.selectedLanguage ??
+    final selectedLanguage =
+        windowState.selectedLanguage ??
         (languages.isNotEmpty ? languages.first.code : null);
 
     // Initialize auto-refresh based on project settings
@@ -202,8 +205,12 @@ class _DetachedPreviewWindowState extends ConsumerState<DetachedPreviewWindow> {
     );
   }
 
-  Widget _buildToolbar(BuildContext context, ThemeData theme,
-      ProjectConfig config, String? selectedLanguage) {
+  Widget _buildToolbar(
+    BuildContext context,
+    ThemeData theme,
+    ProjectConfig config,
+    String? selectedLanguage,
+  ) {
     final windowState = ref.watch(detachableWindowProvider);
     final languages = config.languages;
 
@@ -211,9 +218,7 @@ class _DetachedPreviewWindowState extends ConsumerState<DetachedPreviewWindow> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
-        border: Border(
-          bottom: BorderSide(color: theme.dividerColor),
-        ),
+        border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
       child: Row(
         children: [
@@ -278,7 +283,8 @@ class _DetachedPreviewWindowState extends ConsumerState<DetachedPreviewWindow> {
                         : 'Auto-refresh disabled',
                   ),
                   // Show status indicator when auto-refresh is active
-                  if (autoRefreshState.isEnabled && autoRefreshState.isRefreshing)
+                  if (autoRefreshState.isEnabled &&
+                      autoRefreshState.isRefreshing)
                     const SizedBox(
                       width: 12,
                       height: 12,
@@ -304,7 +310,8 @@ class _DetachedPreviewWindowState extends ConsumerState<DetachedPreviewWindow> {
           // Grid mode toggle
           IconButton(
             icon: Icon(
-                windowState.isGridMode ? Icons.view_agenda : Icons.grid_view),
+              windowState.isGridMode ? Icons.view_agenda : Icons.grid_view,
+            ),
             onPressed: () {
               ref.read(detachableWindowProvider.notifier).toggleGridMode();
             },
@@ -324,9 +331,7 @@ class _DetachedPreviewWindowState extends ConsumerState<DetachedPreviewWindow> {
                 ? const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                    ),
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.play_arrow, size: 18),
             label: Text(windowState.isCompiling ? 'Compiling...' : 'Compile'),
@@ -393,10 +398,7 @@ class _DetachedPreviewWindowState extends ConsumerState<DetachedPreviewWindow> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }

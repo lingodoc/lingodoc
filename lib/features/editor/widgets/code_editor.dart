@@ -75,17 +75,17 @@ class _CodeEditorState extends ConsumerState<CodeEditor> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<String?>(
-      editorProvider.select((s) => s.pendingInsertion),
-      (_, next) {
-        if (next != null) {
-          _insertAtCursor(next);
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            ref.read(editorProvider.notifier).clearInsertion();
-          });
-        }
-      },
-    );
+    ref.listen<String?>(editorProvider.select((s) => s.pendingInsertion), (
+      _,
+      next,
+    ) {
+      if (next != null) {
+        _insertAtCursor(next);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref.read(editorProvider.notifier).clearInsertion();
+        });
+      }
+    });
 
     return Container(
       color: Theme.of(context).colorScheme.surface,
@@ -99,11 +99,20 @@ class _CodeEditorState extends ConsumerState<CodeEditor> {
             child: Shortcuts(
               shortcuts: {
                 // Save shortcut
-                LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyS): const _SaveIntent(),
+                LogicalKeySet(
+                  LogicalKeyboardKey.control,
+                  LogicalKeyboardKey.keyS,
+                ): const _SaveIntent(),
                 // Undo shortcut
-                LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyZ): const _UndoIntent(),
+                LogicalKeySet(
+                  LogicalKeyboardKey.control,
+                  LogicalKeyboardKey.keyZ,
+                ): const _UndoIntent(),
                 // Redo shortcut
-                LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyY): const _RedoIntent(),
+                LogicalKeySet(
+                  LogicalKeyboardKey.control,
+                  LogicalKeyboardKey.keyY,
+                ): const _RedoIntent(),
               },
               child: Actions(
                 actions: {
@@ -136,10 +145,7 @@ class _CodeEditorState extends ConsumerState<CodeEditor> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 1,
-          ),
+          bottom: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
       ),
       child: Row(
@@ -174,8 +180,8 @@ class _CodeEditorState extends ConsumerState<CodeEditor> {
               child: Text(
                 'Modified',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
               ),
             ),
         ],
@@ -216,10 +222,7 @@ class _CodeEditorState extends ConsumerState<CodeEditor> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         border: Border(
-          top: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 1,
-          ),
+          top: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
       ),
       child: Row(

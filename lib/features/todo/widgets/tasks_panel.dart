@@ -37,8 +37,10 @@ class TasksPanel extends ConsumerWidget {
     );
 
     final relPaths = fileRows.keys.toList()..sort();
-    final totalVisible = fileRows.values
-        .fold<int>(0, (sum, r) => sum + r.todos.length + r.trans.length);
+    final totalVisible = fileRows.values.fold<int>(
+      0,
+      (sum, r) => sum + r.todos.length + r.trans.length,
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -101,16 +103,19 @@ class TasksPanel extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.checklist,
-              size: 16,
-              color: total > 0
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurfaceVariant),
+          Icon(
+            Icons.checklist,
+            size: 16,
+            color: total > 0
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 8),
           Text(
             'Tasks ($total)',
-            style: theme.textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const Spacer(),
           // Type filter
@@ -126,8 +131,7 @@ class TasksPanel extends ConsumerWidget {
               (value: TaskTypeFilter.todos, label: 'TODOs'),
               (value: TaskTypeFilter.translations, label: 'Translations'),
             ],
-            onSelected: (v) =>
-                ref.read(taskFilterProvider.notifier).setType(v),
+            onSelected: (v) => ref.read(taskFilterProvider.notifier).setType(v),
           ),
           const SizedBox(width: 4),
           // User filter
@@ -135,8 +139,8 @@ class TasksPanel extends ConsumerWidget {
             label: filter.user == null
                 ? 'User'
                 : (filter.user == kUnassignedFilter
-                    ? 'Unassigned'
-                    : '@${filter.user}'),
+                      ? 'Unassigned'
+                      : '@${filter.user}'),
             active: filter.user != null,
             items: [
               const (value: null, label: 'Any user'),
@@ -144,8 +148,7 @@ class TasksPanel extends ConsumerWidget {
                 (value: kUnassignedFilter, label: 'Unassigned'),
               for (final u in users) (value: u, label: '@$u'),
             ],
-            onSelected: (v) =>
-                ref.read(taskFilterProvider.notifier).setUser(v),
+            onSelected: (v) => ref.read(taskFilterProvider.notifier).setUser(v),
           ),
           const SizedBox(width: 4),
           // Language filter
@@ -156,8 +159,7 @@ class TasksPanel extends ConsumerWidget {
               const (value: null, label: 'Any language'),
               for (final l in langs) (value: l, label: l),
             ],
-            onSelected: (v) =>
-                ref.read(taskFilterProvider.notifier).setLang(v),
+            onSelected: (v) => ref.read(taskFilterProvider.notifier).setLang(v),
           ),
           if (onClose != null)
             IconButton(
@@ -177,15 +179,19 @@ class TasksPanel extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       child: Row(
         children: [
-          Icon(Icons.check_circle_outline,
-              size: 18, color: theme.colorScheme.onSurfaceVariant),
+          Icon(
+            Icons.check_circle_outline,
+            size: 18,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               'No open tasks. TODO markers and out-of-date translations '
               'will appear here.',
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ],
@@ -229,12 +235,14 @@ class _FilterMenu<T> extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(label,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: active
-                      ? theme.colorScheme.onSecondaryContainer
-                      : theme.colorScheme.onSurfaceVariant,
-                )),
+            Text(
+              label,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: active
+                    ? theme.colorScheme.onSecondaryContainer
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
             const Icon(Icons.arrow_drop_down, size: 16),
           ],
         ),
@@ -268,14 +276,18 @@ class _FileGroup extends ConsumerWidget {
           color: theme.colorScheme.surfaceContainer,
           child: Row(
             children: [
-              Icon(Icons.description_outlined,
-                  size: 14, color: theme.colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.description_outlined,
+                size: 14,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   p.basename(relPath),
-                  style: theme.textTheme.labelMedium
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -316,10 +328,12 @@ class _TodoRow extends ConsumerWidget {
     return InkWell(
       onTap: projectPath == null
           ? null
-          : () => ref.read(editorProvider.notifier).openFile(
-                p.join(projectPath!, p.normalize(relPath)),
-                jumpToLine: todo.line,
-              ),
+          : () => ref
+                .read(editorProvider.notifier)
+                .openFile(
+                  p.join(projectPath!, p.normalize(relPath)),
+                  jumpToLine: todo.line,
+                ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(28, 4, 8, 4),
         child: Row(
@@ -360,8 +374,9 @@ class _TodoRow extends ConsumerWidget {
               child: Text(
                 todo.message.isEmpty ? '(no description)' : todo.message,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  fontStyle:
-                      todo.message.isEmpty ? FontStyle.italic : FontStyle.normal,
+                  fontStyle: todo.message.isEmpty
+                      ? FontStyle.italic
+                      : FontStyle.normal,
                   color: todo.message.isEmpty
                       ? theme.colorScheme.onSurfaceVariant
                       : null,
@@ -370,9 +385,12 @@ class _TodoRow extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Text('L${todo.line}',
-                style: theme.textTheme.labelSmall
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            Text(
+              'L${todo.line}',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
       ),
@@ -399,8 +417,8 @@ class _TransRow extends ConsumerWidget {
       onTap: projectPath == null
           ? null
           : () => ref
-              .read(editorProvider.notifier)
-              .openFile(p.join(projectPath!, p.normalize(relPath))),
+                .read(editorProvider.notifier)
+                .openFile(p.join(projectPath!, p.normalize(relPath))),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(28, 4, 4, 4),
         child: Row(
@@ -457,8 +475,7 @@ class _Chip extends StatelessWidget {
         color: bg,
         borderRadius: BorderRadius.circular(4),
       ),
-      child: Text(text,
-          style: theme.textTheme.labelSmall?.copyWith(color: fg)),
+      child: Text(text, style: theme.textTheme.labelSmall?.copyWith(color: fg)),
     );
   }
 }

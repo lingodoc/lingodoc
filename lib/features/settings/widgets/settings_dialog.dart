@@ -128,19 +128,14 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).dividerColor,
-          ),
+          bottom: BorderSide(color: Theme.of(context).dividerColor),
         ),
       ),
       child: Row(
         children: [
           const Icon(Icons.settings, size: 24),
           const SizedBox(width: 12),
-          Text(
-            'Settings',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text('Settings', style: Theme.of(context).textTheme.titleLarge),
         ],
       ),
     );
@@ -290,7 +285,9 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog>
             children: [
               SwitchListTile(
                 title: const Text('Enable auto-refresh'),
-                subtitle: const Text('Automatically refresh preview on changes'),
+                subtitle: const Text(
+                  'Automatically refresh preview on changes',
+                ),
                 value: _currentPreferences.enableAutoRefresh,
                 onChanged: (value) {
                   _updatePreference(
@@ -419,24 +416,14 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: Theme.of(context).dividerColor,
-          ),
-        ),
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          TextButton(
-            onPressed: _cancel,
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: _cancel, child: const Text('Cancel')),
           const SizedBox(width: 8),
-          FilledButton(
-            onPressed: _saveAndClose,
-            child: const Text('Save'),
-          ),
+          FilledButton(onPressed: _saveAndClose, child: const Text('Save')),
         ],
       ),
     );
@@ -448,10 +435,7 @@ class _SettingSection extends StatelessWidget {
   final String title;
   final Widget child;
 
-  const _SettingSection({
-    required this.title,
-    required this.child,
-  });
+  const _SettingSection({required this.title, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -463,15 +447,12 @@ class _SettingSection extends StatelessWidget {
           child: Text(
             title,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                ),
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
-        Card(
-          margin: EdgeInsets.zero,
-          child: child,
-        ),
+        Card(margin: EdgeInsets.zero, child: child),
       ],
     );
   }

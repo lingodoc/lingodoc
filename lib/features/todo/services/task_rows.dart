@@ -63,8 +63,7 @@ Map<String, FileTaskRows> buildTaskRows({
   required TaskFilter filter,
 }) {
   final showTodos = filter.type != TaskTypeFilter.translations;
-  final showTrans =
-      filter.type != TaskTypeFilter.todos && filter.user == null;
+  final showTrans = filter.type != TaskTypeFilter.todos && filter.user == null;
 
   bool todoVisible(TodoItem t) {
     if (filter.user != null) {

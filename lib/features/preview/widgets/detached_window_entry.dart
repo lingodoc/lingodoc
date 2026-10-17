@@ -75,8 +75,8 @@ class DetachedPreviewWindowRoot extends ConsumerStatefulWidget {
 }
 
 class _DetachedPreviewWindowRootState
-    extends ConsumerState<DetachedPreviewWindowRoot> with WidgetsBindingObserver {
-
+    extends ConsumerState<DetachedPreviewWindowRoot>
+    with WidgetsBindingObserver {
   Timer? _heartbeatTimer;
   bool _isClosing = false;
 
@@ -98,12 +98,16 @@ class _DetachedPreviewWindowRootState
   Future<void> _initializeDetachedWindow() async {
     // Load project if path is provided
     if (widget.projectPath != null) {
-      await ref.read(projectTreeProvider.notifier).loadProject(widget.projectPath!);
+      await ref
+          .read(projectTreeProvider.notifier)
+          .loadProject(widget.projectPath!);
     }
 
     // Set initial state
     if (widget.selectedLanguage != null) {
-      ref.read(detachableWindowProvider.notifier).setLanguage(widget.selectedLanguage!);
+      ref
+          .read(detachableWindowProvider.notifier)
+          .setLanguage(widget.selectedLanguage!);
     }
     if (widget.pdfPath != null) {
       ref.read(detachableWindowProvider.notifier).setPdfPath(widget.pdfPath);
@@ -133,7 +137,8 @@ class _DetachedPreviewWindowRootState
     super.didChangeAppLifecycleState(state);
 
     // Detect when app/window is closing
-    if (state == AppLifecycleState.detached || state == AppLifecycleState.paused) {
+    if (state == AppLifecycleState.detached ||
+        state == AppLifecycleState.paused) {
       _notifyMainWindowClosing();
     }
   }

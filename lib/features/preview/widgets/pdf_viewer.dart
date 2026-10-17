@@ -40,7 +40,8 @@ class _PdfViewerState extends State<PdfViewer> {
   String? _lastLoadedPath;
   DateTime? _lastFileModTime;
   int? _savedPageNumber; // Track page number for restoration
-  Timer? _restorationRetryTimer; // Timer for retry logic (not managed by TimerService due to short lifecycle)
+  Timer?
+  _restorationRetryTimer; // Timer for retry logic (not managed by TimerService due to short lifecycle)
   int _restorationAttempts = 0;
   static const int _maxRestorationAttempts = 10;
   static const Duration _restorationRetryInterval = Duration(milliseconds: 100);
@@ -63,7 +64,8 @@ class _PdfViewerState extends State<PdfViewer> {
     super.initState();
 
     // Generate unique timer ID for this viewer instance
-    _fileWatchTimerId = 'pdf_viewer_${widget.languageCode ?? "default"}_${DateTime.now().millisecondsSinceEpoch}';
+    _fileWatchTimerId =
+        'pdf_viewer_${widget.languageCode ?? "default"}_${DateTime.now().millisecondsSinceEpoch}';
 
     // Initialize PDF viewer key based on path
     if (widget.pdfPath != null) {
@@ -88,7 +90,7 @@ class _PdfViewerState extends State<PdfViewer> {
       _checkIfFileModified,
     );
   }
-  
+
   void _onExternalMatrixChanged() {
     final newMatrix = widget.externalMatrixNotifier?.value;
     if (newMatrix != null && _controller.isReady && !_isUpdatingFromExternal) {
@@ -97,7 +99,7 @@ class _PdfViewerState extends State<PdfViewer> {
       _isUpdatingFromExternal = false;
     }
   }
-  
+
   void _onControllerChanged() {
     if (!_isUpdatingFromExternal && _controller.isReady) {
       widget.onMatrixChanged?.call(_controller.value);
@@ -170,7 +172,8 @@ class _PdfViewerState extends State<PdfViewer> {
 
       // Check if this is a language change (same document, different language)
       // In this case, we want to preserve the current page position
-      final isLanguageChange = widget.languageCode != oldWidget.languageCode &&
+      final isLanguageChange =
+          widget.languageCode != oldWidget.languageCode &&
           oldWidget.pdfPath != null &&
           widget.pdfPath != null;
 
@@ -205,7 +208,9 @@ class _PdfViewerState extends State<PdfViewer> {
         // This allows the PDF to reload but with better state preservation
         if (widget.pdfPath != null && isLanguageChange) {
           // Force a new key to load the new PDF, but restore page after
-          _pdfViewerKey = ValueKey('${widget.pdfPath}_${DateTime.now().millisecondsSinceEpoch}');
+          _pdfViewerKey = ValueKey(
+            '${widget.pdfPath}_${DateTime.now().millisecondsSinceEpoch}',
+          );
         }
       });
       _checkPdf();
@@ -216,7 +221,9 @@ class _PdfViewerState extends State<PdfViewer> {
 
     // Update external matrix notifier listener
     if (widget.externalMatrixNotifier != oldWidget.externalMatrixNotifier) {
-      oldWidget.externalMatrixNotifier?.removeListener(_onExternalMatrixChanged);
+      oldWidget.externalMatrixNotifier?.removeListener(
+        _onExternalMatrixChanged,
+      );
       widget.externalMatrixNotifier?.addListener(_onExternalMatrixChanged);
     }
 
@@ -226,7 +233,7 @@ class _PdfViewerState extends State<PdfViewer> {
       widget.syncController?.forwardTarget.addListener(_onForwardTarget);
     }
   }
-  
+
   @override
   void dispose() {
     // Cancel file watch timer using TimerService
@@ -284,7 +291,7 @@ class _PdfViewerState extends State<PdfViewer> {
     }
 
     _restorationAttempts++;
-    
+
     _restorationRetryTimer = Timer(_restorationRetryInterval, () {
       _tryRestorePage();
     });
@@ -352,7 +359,7 @@ class _PdfViewerState extends State<PdfViewer> {
         _isLoading = false;
         _errorMessage = null;
       });
-      
+
       // Trigger page restoration after PDF loads
       if (_savedPageNumber != null) {
         // Use a small initial delay to let the PDF viewer initialize
@@ -386,7 +393,8 @@ class _PdfViewerState extends State<PdfViewer> {
       final stat = await file.stat();
 
       // If file was modified after last load, reload it
-      if (_lastFileModTime == null || stat.modified.isAfter(_lastFileModTime!)) {
+      if (_lastFileModTime == null ||
+          stat.modified.isAfter(_lastFileModTime!)) {
         // Save current page number before reloading
         if (_controller.isReady) {
           final currentPage = _controller.pageNumber;
@@ -395,7 +403,7 @@ class _PdfViewerState extends State<PdfViewer> {
 
         // Update modification time FIRST before reloading
         _lastFileModTime = stat.modified;
-        
+
         // Reload the PDF by calling _checkPdf which will handle the reload properly
         await _checkPdf();
       }
@@ -415,9 +423,7 @@ class _PdfViewerState extends State<PdfViewer> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceContainerHighest,
-            border: Border(
-              bottom: BorderSide(color: theme.dividerColor),
-            ),
+            border: Border(bottom: BorderSide(color: theme.dividerColor)),
           ),
           child: Row(
             children: [
@@ -481,9 +487,7 @@ class _PdfViewerState extends State<PdfViewer> {
         ),
 
         // PDF content
-        Expanded(
-          child: _buildContent(theme),
-        ),
+        Expanded(child: _buildContent(theme)),
       ],
     );
   }
@@ -497,10 +501,7 @@ class _PdfViewerState extends State<PdfViewer> {
           children: [
             const CircularProgressIndicator(),
             const SizedBox(height: 16),
-            Text(
-              'Loading PDF...',
-              style: theme.textTheme.bodyMedium,
-            ),
+            Text('Loading PDF...', style: theme.textTheme.bodyMedium),
           ],
         ),
       );
@@ -512,16 +513,9 @@ class _PdfViewerState extends State<PdfViewer> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: theme.colorScheme.error,
-            ),
+            Icon(Icons.error_outline, size: 64, color: theme.colorScheme.error),
             const SizedBox(height: 16),
-            Text(
-              'Error',
-              style: theme.textTheme.titleLarge,
-            ),
+            Text('Error', style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -638,8 +632,9 @@ class _PdfViewerState extends State<PdfViewer> {
             ),
           ],
           onViewerReady: (document, controller) {
-            _pageHeightsPt =
-                document.pages.map((p) => p.height).toList(growable: false);
+            _pageHeightsPt = document.pages
+                .map((p) => p.height)
+                .toList(growable: false);
             if (_savedPageNumber != null && _savedPageNumber! > 1) {
               // Use the retry-based restoration which is more robust
               _attemptPageRestoration();
@@ -650,16 +645,23 @@ class _PdfViewerState extends State<PdfViewer> {
     );
 
     final Map<ShortcutActivator, VoidCallback> shortcuts = {
-      const SingleActivator(LogicalKeyboardKey.arrowUp, control: true): () => _navigatePage(-1),
-      const SingleActivator(LogicalKeyboardKey.arrowDown, control: true): () => _navigatePage(1),
+      const SingleActivator(LogicalKeyboardKey.arrowUp, control: true): () =>
+          _navigatePage(-1),
+      const SingleActivator(LogicalKeyboardKey.arrowDown, control: true): () =>
+          _navigatePage(1),
     };
 
     if (widget.syncController != null) {
       shortcuts[const SingleActivator(
-          LogicalKeyboardKey.keyJ, control: true, shift: true)] = _jumpToSource;
+            LogicalKeyboardKey.keyJ,
+            control: true,
+            shift: true,
+          )] =
+          _jumpToSource;
       viewer = GestureDetector(
         behavior: HitTestBehavior.translucent,
-        onSecondaryTapDown: (details) => _showJumpToSourceMenu(details.globalPosition),
+        onSecondaryTapDown: (details) =>
+            _showJumpToSourceMenu(details.globalPosition),
         child: CallbackShortcuts(
           bindings: shortcuts,
           child: Focus(child: viewer),
@@ -676,7 +678,8 @@ class _PdfViewerState extends State<PdfViewer> {
   }
 
   Future<void> _showJumpToSourceMenu(Offset globalPosition) async {
-    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
+    final overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox?;
     if (overlay == null) return;
     final selected = await showMenu<String>(
       context: context,

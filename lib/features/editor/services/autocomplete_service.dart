@@ -363,13 +363,15 @@ class AutocompleteService {
       final terms = _parseTermsFile(content);
 
       _projectTerms = terms
-          .map((term) => Suggestion(
-                label: '#term($term)',
-                insertText: '#term($term)',
-                type: SuggestionType.term,
-                description: 'Project term: $term',
-                detail: 'From terms.typ',
-              ))
+          .map(
+            (term) => Suggestion(
+              label: '#term($term)',
+              insertText: '#term($term)',
+              type: SuggestionType.term,
+              description: 'Project term: $term',
+              detail: 'From terms.typ',
+            ),
+          )
           .toList();
 
       // Clear cache when terms are loaded/updated
@@ -412,8 +414,6 @@ class AutocompleteService {
 
     return terms;
   }
-
-
 
   /// Get all suggestions matching the prefix (synchronous, with caching)
   List<Suggestion> getSuggestions(String prefix) {
@@ -467,15 +467,12 @@ class AutocompleteService {
     }
 
     // Debounce the actual computation
-    _debounceTimer = Timer(
-      Duration(milliseconds: _debounceDurationMs),
-      () {
-        final suggestions = getSuggestions(prefix);
-        if (!completer.isCompleted) {
-          completer.complete(suggestions);
-        }
-      },
-    );
+    _debounceTimer = Timer(Duration(milliseconds: _debounceDurationMs), () {
+      final suggestions = getSuggestions(prefix);
+      if (!completer.isCompleted) {
+        completer.complete(suggestions);
+      }
+    });
 
     return completer.future;
   }
@@ -504,16 +501,19 @@ class AutocompleteService {
     if (lastWord.startsWith('#')) {
       // Function context
       return getSuggestions(lastWord)
-          .where((s) =>
-              s.type == SuggestionType.function || s.type == SuggestionType.term)
+          .where(
+            (s) =>
+                s.type == SuggestionType.function ||
+                s.type == SuggestionType.term,
+          )
           .toList();
     } else if (lastWord.startsWith('*') ||
         lastWord.startsWith('_') ||
         lastWord.startsWith('`')) {
       // Markup context
-      return getSuggestions(lastWord)
-          .where((s) => s.type == SuggestionType.markup)
-          .toList();
+      return getSuggestions(
+        lastWord,
+      ).where((s) => s.type == SuggestionType.markup).toList();
     } else {
       // General context - all suggestions
       return getSuggestions(lastWord);

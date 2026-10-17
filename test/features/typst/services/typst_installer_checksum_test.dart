@@ -101,8 +101,11 @@ void main() {
 
       // Verify all platforms are present
       for (final platform in supportedPlatforms) {
-        expect(checksums.containsKey(platform), isTrue,
-            reason: 'Platform $platform should have a checksum entry');
+        expect(
+          checksums.containsKey(platform),
+          isTrue,
+          reason: 'Platform $platform should have a checksum entry',
+        );
       }
     });
 
@@ -112,8 +115,10 @@ void main() {
           '8a7d3f6f8c0b5e4a2d3c1f9e8b7a6d5c4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b';
 
       // Simulate placeholder detection logic
-      final isPlaceholder1 = placeholder == 'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE';
-      final isPlaceholder2 = validHash == 'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE';
+      final isPlaceholder1 =
+          placeholder == 'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE';
+      final isPlaceholder2 =
+          validHash == 'VERIFY_CHECKSUM_FROM_OFFICIAL_RELEASE';
 
       expect(isPlaceholder1, isTrue);
       expect(isPlaceholder2, isFalse);
@@ -134,8 +139,11 @@ void main() {
       final isValid =
           tamperedHash.toLowerCase() == legitimateHash.toLowerCase();
 
-      expect(isValid, isFalse,
-          reason: 'Tampered data should not match legitimate checksum');
+      expect(
+        isValid,
+        isFalse,
+        reason: 'Tampered data should not match legitimate checksum',
+      );
     });
 
     test('Checksum format validation', () {
@@ -146,8 +154,10 @@ void main() {
       expect(validHash, matches(RegExp(r'^[a-f0-9]{64}$')));
 
       // Invalid formats
-      const tooShort = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'; // 63 chars
-      const tooLong = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'; // 65 chars
+      const tooShort =
+          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'; // 63 chars
+      const tooLong =
+          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'; // 65 chars
       const invalidChars =
           'gaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'; // 'g' is not a valid hex character
 

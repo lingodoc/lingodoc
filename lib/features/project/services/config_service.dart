@@ -10,7 +10,7 @@ class ConfigService {
   /// Throws [FormatException] if the TOML is invalid or required fields are missing.
   Future<ProjectConfig> loadConfig(String projectPath) async {
     final configFile = File('$projectPath/config.toml');
-    
+
     if (!await configFile.exists()) {
       throw FileSystemException(
         'Configuration file not found',
@@ -29,7 +29,9 @@ class ConfigService {
     // Parse languages array
     final languagesRaw = toml['languages'] as List<dynamic>?;
     if (languagesRaw == null || languagesRaw.isEmpty) {
-      throw const FormatException('Missing or empty "languages" array in config.toml');
+      throw const FormatException(
+        'Missing or empty "languages" array in config.toml',
+      );
     }
 
     final languages = languagesRaw.map((lang) {
@@ -45,12 +47,17 @@ class ConfigService {
     final lastLangMap = languagesRaw.last as Map<String, dynamic>;
 
     // Parse language_order array (might be in last language element due to TOML bug)
-    final languageOrderRaw = (toml['language_order'] ?? lastLangMap['language_order']) as List<dynamic>?;
-    final languageOrder = languageOrderRaw?.cast<String>() ??
+    final languageOrderRaw =
+        (toml['language_order'] ?? lastLangMap['language_order'])
+            as List<dynamic>?;
+    final languageOrder =
+        languageOrderRaw?.cast<String>() ??
         languages.map((l) => l.code).toList();
 
     // Parse view_mode (might be in last language element due to TOML bug)
-    final viewMode = (toml['view_mode'] ?? lastLangMap['view_mode']) as String? ?? 'Sequential';
+    final viewMode =
+        (toml['view_mode'] ?? lastLangMap['view_mode']) as String? ??
+        'Sequential';
 
     // Parse editor_settings
     final editorSettingsMap = toml['editor_settings'] as Map<String, dynamic>?;
@@ -60,20 +67,27 @@ class ConfigService {
             fontSize: editorSettingsMap['font_size'] as int? ?? 14,
             lineNumbers: editorSettingsMap['line_numbers'] as bool? ?? true,
             wordWrap: editorSettingsMap['word_wrap'] as bool? ?? true,
-            autoSaveInterval: editorSettingsMap['auto_save_interval'] as int? ?? 1,
+            autoSaveInterval:
+                editorSettingsMap['auto_save_interval'] as int? ?? 1,
           )
         : const EditorSettings();
 
     // Parse project_settings
-    final projectSettingsMap = toml['project_settings'] as Map<String, dynamic>?;
+    final projectSettingsMap =
+        toml['project_settings'] as Map<String, dynamic>?;
     if (projectSettingsMap == null) {
-      throw const FormatException('Missing "project_settings" section in config.toml');
+      throw const FormatException(
+        'Missing "project_settings" section in config.toml',
+      );
     }
 
     // Parse default_language
-    final defaultLangMap = projectSettingsMap['default_language'] as Map<String, dynamic>?;
+    final defaultLangMap =
+        projectSettingsMap['default_language'] as Map<String, dynamic>?;
     if (defaultLangMap == null) {
-      throw const FormatException('Missing "default_language" in project_settings');
+      throw const FormatException(
+        'Missing "default_language" in project_settings',
+      );
     }
 
     final defaultLanguage = LanguageConfig(
@@ -83,9 +97,11 @@ class ConfigService {
 
     final projectSettings = ProjectSettings(
       defaultLanguage: defaultLanguage,
-      outputDirectory: projectSettingsMap['output_directory'] as String? ?? 'output',
+      outputDirectory:
+          projectSettingsMap['output_directory'] as String? ?? 'output',
       autoCompile: projectSettingsMap['auto_compile'] as bool? ?? true,
-      compileDebounceMs: projectSettingsMap['compile_debounce_ms'] as int? ?? 500,
+      compileDebounceMs:
+          projectSettingsMap['compile_debounce_ms'] as int? ?? 500,
     );
 
     return ProjectConfig(
@@ -100,7 +116,7 @@ class ConfigService {
   /// Saves a ProjectConfig back to the config.toml file.
   Future<void> saveConfig(String projectPath, ProjectConfig config) async {
     final configFile = File('$projectPath/config.toml');
-    
+
     // Build TOML content
     final buffer = StringBuffer();
     buffer.writeln('# LingoDoc Project Configuration');
@@ -130,16 +146,24 @@ class ConfigService {
     buffer.writeln('font_size = ${config.editorSettings.fontSize}');
     buffer.writeln('line_numbers = ${config.editorSettings.lineNumbers}');
     buffer.writeln('word_wrap = ${config.editorSettings.wordWrap}');
-    buffer.writeln('auto_save_interval = ${config.editorSettings.autoSaveInterval}');
+    buffer.writeln(
+      'auto_save_interval = ${config.editorSettings.autoSaveInterval}',
+    );
     buffer.writeln();
 
     // Write project_settings
     buffer.writeln('[project_settings]');
-    buffer.write('default_language = { code = "${config.projectSettings.defaultLanguage.code}", ');
+    buffer.write(
+      'default_language = { code = "${config.projectSettings.defaultLanguage.code}", ',
+    );
     buffer.writeln('name = "${config.projectSettings.defaultLanguage.name}" }');
-    buffer.writeln('output_directory = "${config.projectSettings.outputDirectory}"');
+    buffer.writeln(
+      'output_directory = "${config.projectSettings.outputDirectory}"',
+    );
     buffer.writeln('auto_compile = ${config.projectSettings.autoCompile}');
-    buffer.writeln('compile_debounce_ms = ${config.projectSettings.compileDebounceMs}');
+    buffer.writeln(
+      'compile_debounce_ms = ${config.projectSettings.compileDebounceMs}',
+    );
 
     await configFile.writeAsString(buffer.toString());
   }

@@ -58,7 +58,10 @@ void main() {
     test('a level-4 (====) caret snaps up to the nearest <=3 section', () {
       final plan = svc.computeSplit(src, src.indexOf('body c'));
       expect(plan.ok, isTrue);
-      expect(plan.cutHeading, 'Sub B'); // snapped up to unit1, not the ==== unit
+      expect(
+        plan.cutHeading,
+        'Sub B',
+      ); // snapped up to unit1, not the ==== unit
       expect(plan.tail.contains('para-002'), isTrue);
       expect(plan.tail.contains('para-003'), isTrue);
       expect(plan.head.contains('para-002'), isFalse);
@@ -77,7 +80,8 @@ void main() {
     });
 
     test('rejects a single-unit chapter', () {
-      const single = '#import "../lang.typ": current-lang\n'
+      const single =
+          '#import "../lang.typ": current-lang\n'
           '#let lang-content = (en: [= Title\nbody])\n'
           '#lang-content.at(current-lang)\n';
       final plan = svc.computeSplit(single, single.indexOf('body'));
@@ -92,7 +96,8 @@ void main() {
   });
 
   group('insertInclude', () {
-    const main = '#include "chapters/04-software-1.typ"\n'
+    const main =
+        '#include "chapters/04-software-1.typ"\n'
         '#include "chapters/05-apollo-iii-in-detail.typ"\n';
 
     test('inserts the new include right after the source include', () {
@@ -111,8 +116,11 @@ void main() {
     });
 
     test('reports not-found when the source include is absent', () {
-      final (out, found) =
-          svc.insertInclude(main, 'chapters/99-missing.typ', 'chapters/x.typ');
+      final (out, found) = svc.insertInclude(
+        main,
+        'chapters/99-missing.typ',
+        'chapters/x.typ',
+      );
       expect(found, isFalse);
       expect(out, main);
     });
@@ -126,7 +134,8 @@ void main() {
     });
 
     test('empty for a single-unit chapter', () {
-      const single = '#let lang-content = (en: [= T\nx])\n'
+      const single =
+          '#let lang-content = (en: [= T\nx])\n'
           '#lang-content.at(current-lang)\n';
       expect(svc.listSections(single), isEmpty);
     });
@@ -173,10 +182,10 @@ void main() {
       final sections = svc.listSections(srcMulti);
       expect(sections.map((s) => s.heading), ['T', 'A', 'B', 'C']);
       // Select A and C → original keeps T; part1 = A+B; part2 = C.
-      final plan = svc.computeMultiSplit(
-        srcMulti,
-        {sections[1].unitStartLine, sections[3].unitStartLine},
-      );
+      final plan = svc.computeMultiSplit(srcMulti, {
+        sections[1].unitStartLine,
+        sections[3].unitStartLine,
+      });
       expect(plan.ok, isTrue);
       expect(plan.parts.length, 2);
       expect(plan.parts[0].heading, 'A');
@@ -208,11 +217,10 @@ void main() {
   group('insertIncludes', () {
     test('inserts multiple includes in order after the source', () {
       const main = '#include "chapters/05-detail.typ"\n';
-      final (out, found) = svc.insertIncludes(
-        main,
-        'chapters/05-detail.typ',
-        ['chapters/05-a.typ', 'chapters/05-b.typ'],
-      );
+      final (out, found) = svc.insertIncludes(main, 'chapters/05-detail.typ', [
+        'chapters/05-a.typ',
+        'chapters/05-b.typ',
+      ]);
       expect(found, isTrue);
       expect(
         out,
@@ -225,8 +233,10 @@ void main() {
 
   group('chapterSlug', () {
     test('produces a filesystem-friendly slug', () {
-      expect(chapterSlug('APOLLO III bus ("COM" connection)'),
-          'apollo-iii-bus-com-connection');
+      expect(
+        chapterSlug('APOLLO III bus ("COM" connection)'),
+        'apollo-iii-bus-com-connection',
+      );
       expect(chapterSlug('  '), 'part');
     });
   });

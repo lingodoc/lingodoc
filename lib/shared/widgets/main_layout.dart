@@ -33,8 +33,9 @@ class PreviewEnabledNotifier extends Notifier<bool> {
   void toggle() => state = !state;
 }
 
-final previewEnabledProvider =
-    NotifierProvider<PreviewEnabledNotifier, bool>(PreviewEnabledNotifier.new);
+final previewEnabledProvider = NotifierProvider<PreviewEnabledNotifier, bool>(
+  PreviewEnabledNotifier.new,
+);
 
 /// Whether the translation-staleness panel is shown below the editor.
 class TranslationPanelVisibleNotifier extends Notifier<bool> {
@@ -47,7 +48,8 @@ class TranslationPanelVisibleNotifier extends Notifier<bool> {
 
 final translationPanelVisibleProvider =
     NotifierProvider<TranslationPanelVisibleNotifier, bool>(
-        TranslationPanelVisibleNotifier.new);
+      TranslationPanelVisibleNotifier.new,
+    );
 
 /// Intent for save action
 class SaveIntent extends Intent {
@@ -77,7 +79,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   @override
   void initState() {
     super.initState();
-    
+
     // Initialize controller with 3-panel layout (default)
     _splitController = SplitViewController(
       weights: [0.2, 0.4, 0.4],
@@ -87,7 +89,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
         WeightLimit(min: 0.30, max: 0.50),
       ],
     );
-    
+
     // Restore last opened project (or fall back to sample project)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _autoRestoreProject();
@@ -113,13 +115,22 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
       }
 
       // Fall back to the bundled sample project
-      final sampleProjectPath = p.join(Directory.current.path, 'sample-project');
+      final sampleProjectPath = p.join(
+        Directory.current.path,
+        'sample-project',
+      );
       if (await Directory(sampleProjectPath).exists()) {
-        await ref.read(projectTreeProvider.notifier).loadProject(sampleProjectPath);
+        await ref
+            .read(projectTreeProvider.notifier)
+            .loadProject(sampleProjectPath);
 
         await Future.delayed(const Duration(milliseconds: 500));
 
-        final chapter04Path = p.join(sampleProjectPath, 'chapters', '04-master-clock-screens.typ');
+        final chapter04Path = p.join(
+          sampleProjectPath,
+          'chapters',
+          '04-master-clock-screens.typ',
+        );
         if (await File(chapter04Path).exists()) {
           await ref.read(editorProvider.notifier).openFile(chapter04Path);
         }
@@ -209,30 +220,30 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
         child: Scaffold(
           appBar: _buildMenuBar(context),
           body: SplitView(
-        key: ValueKey('split-view-${hidePreview ? "2-panel" : "3-panel"}'),
-        viewMode: SplitViewMode.Horizontal,
-        indicator: const SplitIndicator(
-          viewMode: SplitViewMode.Horizontal,
-          color: Colors.grey,
-        ),
-        activeIndicator: const SplitIndicator(
-          viewMode: SplitViewMode.Horizontal,
-          color: Colors.blueAccent,
-          isActive: true,
-        ),
-        controller: _splitController,
-        children: hidePreview
-            ? [
-                // 2-panel layout: Tree + Editor only
-                _buildProjectPanel(),
-                _buildEditorPanel(),
-              ]
-            : [
-                // 3-panel layout: Tree + Editor + Preview
-                _buildProjectPanel(),
-                _buildEditorPanel(),
-                _buildPreviewPanel(),
-              ],
+            key: ValueKey('split-view-${hidePreview ? "2-panel" : "3-panel"}'),
+            viewMode: SplitViewMode.Horizontal,
+            indicator: const SplitIndicator(
+              viewMode: SplitViewMode.Horizontal,
+              color: Colors.grey,
+            ),
+            activeIndicator: const SplitIndicator(
+              viewMode: SplitViewMode.Horizontal,
+              color: Colors.blueAccent,
+              isActive: true,
+            ),
+            controller: _splitController,
+            children: hidePreview
+                ? [
+                    // 2-panel layout: Tree + Editor only
+                    _buildProjectPanel(),
+                    _buildEditorPanel(),
+                  ]
+                : [
+                    // 3-panel layout: Tree + Editor + Preview
+                    _buildProjectPanel(),
+                    _buildEditorPanel(),
+                    _buildPreviewPanel(),
+                  ],
           ),
         ),
       ),
@@ -248,10 +259,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainerHighest,
           border: Border(
-            bottom: BorderSide(
-              color: Theme.of(context).dividerColor,
-              width: 1,
-            ),
+            bottom: BorderSide(color: Theme.of(context).dividerColor, width: 1),
           ),
         ),
         child: Row(
@@ -430,9 +438,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
               ),
             ],
           ),
-          const Expanded(
-            child: ProjectTree(),
-          ),
+          const Expanded(child: ProjectTree()),
         ],
       ),
     );
@@ -462,13 +468,8 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             icon: Icons.edit,
             actions: [
               IconButton(
-                icon: _StaleBadgeIcon(
-                  count: totalTasks,
-                  active: panelVisible,
-                ),
-                tooltip: totalTasks > 0
-                    ? '$totalTasks open task(s)'
-                    : 'Tasks',
+                icon: _StaleBadgeIcon(count: totalTasks, active: panelVisible),
+                tooltip: totalTasks > 0 ? '$totalTasks open task(s)' : 'Tasks',
                 onPressed: () =>
                     ref.read(translationPanelVisibleProvider.notifier).toggle(),
               ),
@@ -479,9 +480,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
               ),
             ],
           ),
-          const Expanded(
-            child: EditorTabs(),
-          ),
+          const Expanded(child: EditorTabs()),
           if (panelVisible)
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 220),
@@ -521,9 +520,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
               ),
             ],
           ),
-          const Expanded(
-            child: PreviewPanel(),
-          ),
+          const Expanded(child: PreviewPanel()),
         ],
       ),
     );
@@ -586,10 +583,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   }
 
   void _showSettingsDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const SettingsDialog(),
-    );
+    showDialog(context: context, builder: (context) => const SettingsDialog());
   }
 
   void _showScreenPicker(BuildContext context) {
@@ -620,10 +614,7 @@ class _PanelHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 1,
-          ),
+          bottom: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
       ),
       child: Row(
@@ -632,9 +623,9 @@ class _PanelHeader extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             title,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ),
           const Spacer(),
           ...actions,
@@ -649,10 +640,7 @@ class _MenuBarItem extends StatefulWidget {
   final String label;
   final List<Widget> items;
 
-  const _MenuBarItem({
-    required this.label,
-    required this.items,
-  });
+  const _MenuBarItem({required this.label, required this.items});
 
   @override
   State<_MenuBarItem> createState() => _MenuBarItemState();
@@ -666,11 +654,13 @@ class _MenuBarItemState extends State<_MenuBarItem> {
     return PopupMenuButton<void>(
       offset: const Offset(0, 40),
       itemBuilder: (context) => widget.items
-          .map((item) => PopupMenuItem<void>(
-                height: item is _MenuDivider ? 8 : 40,
-                padding: EdgeInsets.zero,
-                child: item,
-              ))
+          .map(
+            (item) => PopupMenuItem<void>(
+              height: item is _MenuDivider ? 8 : 40,
+              padding: EdgeInsets.zero,
+              child: item,
+            ),
+          )
           .toList(),
       child: MouseRegion(
         onEnter: (_) => setState(() => _isHovered = true),
@@ -724,9 +714,9 @@ class _MenuItem extends StatelessWidget {
             if (shortcut != null)
               Text(
                 shortcut!,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.grey),
               ),
           ],
         ),

@@ -40,7 +40,11 @@ class FileSystemService {
       // Store project root for boundary checking in expandNode
       _currentProjectRoot = sanitizedPath;
 
-      final rootNodes = await _loadDirectoryContents(projectDir, 0, sanitizedPath);
+      final rootNodes = await _loadDirectoryContents(
+        projectDir,
+        0,
+        sanitizedPath,
+      );
       return rootNodes;
     } catch (e, stackTrace) {
       developer.log(
@@ -168,7 +172,11 @@ class FileSystemService {
       }
 
       final dir = Directory(node.path);
-      node.children = await _loadDirectoryContents(dir, node.depth + 1, projectRoot);
+      node.children = await _loadDirectoryContents(
+        dir,
+        node.depth + 1,
+        projectRoot,
+      );
       node.isExpanded = true;
     } catch (e, stackTrace) {
       developer.log(

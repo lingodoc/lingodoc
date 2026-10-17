@@ -8,12 +8,14 @@ import 'translation_sidecar_service.dart';
 import 'translation_staleness.dart';
 
 /// Sidecar I/O service.
-final translationSidecarServiceProvider =
-    Provider<TranslationSidecarService>((ref) => TranslationSidecarService());
+final translationSidecarServiceProvider = Provider<TranslationSidecarService>(
+  (ref) => TranslationSidecarService(),
+);
 
 /// Pure block extractor.
-final translationBlockExtractorProvider =
-    Provider<TranslationBlockExtractor>((ref) => const TranslationBlockExtractor());
+final translationBlockExtractorProvider = Provider<TranslationBlockExtractor>(
+  (ref) => const TranslationBlockExtractor(),
+);
 
 /// Project-relative POSIX path for a file (the sidecar's file-map key).
 String translationRelPath(String projectPath, String filePath) =>
@@ -37,7 +39,9 @@ class TranslationStateNotifier extends Notifier<TranslationProjectState> {
   Future<void> loadForProject(String projectPath) async {
     _projectPath = projectPath;
     try {
-      final config = await ref.read(configServiceProvider).loadConfig(projectPath);
+      final config = await ref
+          .read(configServiceProvider)
+          .loadConfig(projectPath);
       _languageCodes = config.languages.map((l) => l.code).toList();
     } catch (_) {
       _languageCodes = const [];
@@ -54,8 +58,9 @@ class TranslationStateNotifier extends Notifier<TranslationProjectState> {
     final relPath = translationRelPath(projectPath, filePath);
     if (relPath.startsWith('..')) return; // outside the project
 
-    final blocks =
-        ref.read(translationBlockExtractorProvider).extract(content, _languageCodes);
+    final blocks = ref
+        .read(translationBlockExtractorProvider)
+        .extract(content, _languageCodes);
     if (blocks.isEmpty) return; // not a translation file
 
     final newFileState = reconcileFile(
@@ -103,4 +108,5 @@ class TranslationStateNotifier extends Notifier<TranslationProjectState> {
 
 final translationStateProvider =
     NotifierProvider<TranslationStateNotifier, TranslationProjectState>(
-        TranslationStateNotifier.new);
+      TranslationStateNotifier.new,
+    );

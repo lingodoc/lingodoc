@@ -103,8 +103,10 @@ class _ChapterSplitDialogState extends State<ChapterSplitDialog> {
                           decoration: const InputDecoration(
                             isDense: true,
                             border: OutlineInputBorder(),
-                            contentPadding:
-                                EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 8,
+                            ),
                           ),
                           style: theme.textTheme.bodySmall,
                         ),
@@ -132,8 +134,10 @@ class _ChapterSplitDialogState extends State<ChapterSplitDialog> {
                   };
                   Navigator.of(context).pop(result);
                 },
-          child: Text('Split into ${_selected.length} file'
-              '${_selected.length == 1 ? '' : 's'}'),
+          child: Text(
+            'Split into ${_selected.length} file'
+            '${_selected.length == 1 ? '' : 's'}',
+          ),
         ),
       ],
     );

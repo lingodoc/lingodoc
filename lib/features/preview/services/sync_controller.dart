@@ -62,8 +62,10 @@ class SyncController {
     lastError = error;
     anchorCount.value = _map.anchorCount;
     if (kDebugMode) {
-      debugPrint('[sync] anchors=${_map.anchorCount}'
-          '${error != null ? ' error=$error' : ''}');
+      debugPrint(
+        '[sync] anchors=${_map.anchorCount}'
+        '${error != null ? ' error=$error' : ''}',
+      );
     }
   }
 
@@ -83,8 +85,11 @@ class SyncController {
   bool requestInverse(int page, double y) {
     final loc = _map.inverse(page, y);
     if (loc == null) return false;
-    inverseTarget.value =
-        SyncInverseTarget(loc.line, ++_requestCounter, filePath: loc.filePath);
+    inverseTarget.value = SyncInverseTarget(
+      loc.line,
+      ++_requestCounter,
+      filePath: loc.filePath,
+    );
     return true;
   }
 

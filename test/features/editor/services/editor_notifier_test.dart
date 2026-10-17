@@ -48,16 +48,19 @@ void main() {
       expect(state().error, isNotNull);
     });
 
-    test('opening an already-open file switches to it without duplicating', () async {
-      final file = File('${tempDir.path}/a.typ');
-      await file.writeAsString('A');
+    test(
+      'opening an already-open file switches to it without duplicating',
+      () async {
+        final file = File('${tempDir.path}/a.typ');
+        await file.writeAsString('A');
 
-      await notifier().openFile(file.path);
-      await notifier().openFile(file.path);
+        await notifier().openFile(file.path);
+        await notifier().openFile(file.path);
 
-      expect(state().tabs.length, 1);
-      expect(state().activeTabIndex, 0);
-    });
+        expect(state().tabs.length, 1);
+        expect(state().activeTabIndex, 0);
+      },
+    );
 
     test('stores pendingLineJump when jumpToLine is provided', () async {
       final file = File('${tempDir.path}/b.typ');
@@ -105,17 +108,20 @@ void main() {
       expect(state().tabs.first.fileName, 'first.typ');
     });
 
-    test('closing a tab before the active tab decrements active index', () async {
-      await openFile('a.typ', 'a');
-      await openFile('b.typ', 'b');
-      await openFile('c.typ', 'c');
-      // active is index 2 (c)
-      notifier().closeTab(0);
+    test(
+      'closing a tab before the active tab decrements active index',
+      () async {
+        await openFile('a.typ', 'a');
+        await openFile('b.typ', 'b');
+        await openFile('c.typ', 'c');
+        // active is index 2 (c)
+        notifier().closeTab(0);
 
-      expect(state().tabs.length, 2);
-      expect(state().activeTabIndex, 1);
-      expect(state().activeTab?.fileName, 'c.typ');
-    });
+        expect(state().tabs.length, 2);
+        expect(state().activeTabIndex, 1);
+        expect(state().activeTab?.fileName, 'c.typ');
+      },
+    );
 
     test('out-of-range index is a no-op', () async {
       await openFile('d.typ', 'd');

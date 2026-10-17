@@ -29,6 +29,7 @@ class TypstCompiler {
     final path = await _pathResolver.findExecutable();
     return path ?? 'typst';
   }
+
   /// Compile a Typst document for a specific language
   ///
   /// This function:
@@ -46,7 +47,9 @@ class TypstCompiler {
     try {
       // Step 0: Validate inputs for security
       PathValidator.validateLanguageCode(languageCode);
-      final sanitizedProjectPath = PathValidator.sanitizeProjectPath(projectPath);
+      final sanitizedProjectPath = PathValidator.sanitizeProjectPath(
+        projectPath,
+      );
 
       // Validate project directory exists
       if (!await Directory(sanitizedProjectPath).exists()) {
@@ -71,24 +74,19 @@ class TypstCompiler {
       await Directory(outputDirectory).create(recursive: true);
 
       // Use absolute path for PDF viewer to locate the file correctly
-      final outputPdfPath = path.absolute(path.join(
-        outputDirectory,
-        'output_$languageCode.pdf',
-      ));
+      final outputPdfPath = path.absolute(
+        path.join(outputDirectory, 'output_$languageCode.pdf'),
+      );
 
       // Step 3: Run Typst compiler
       final mainTypPath = path.join(sanitizedProjectPath, 'main.typ');
       final typstExecutable = await _getTypstExecutable();
 
-      final result = await Process.run(
-        typstExecutable,
-        [
-          'compile',
-          mainTypPath,
-          outputPdfPath,
-        ],
-        workingDirectory: sanitizedProjectPath,
-      );
+      final result = await Process.run(typstExecutable, [
+        'compile',
+        mainTypPath,
+        outputPdfPath,
+      ], workingDirectory: sanitizedProjectPath);
 
       if (result.exitCode != 0) {
         // Compilation failed - stderr is already captured in error result
@@ -200,7 +198,8 @@ class TypstCompiler {
       }
 
       // Append the result collector and write the probe main.
-      probeMain = '$probeMain\n'
+      probeMain =
+          '$probeMain\n'
           '#context [\n'
           '  #metadata(query(<${SyncAnchorInjector.label}>).map(m => (\n'
           '    c: m.value.c,\n'
@@ -215,24 +214,22 @@ class TypstCompiler {
       tempFiles.add(probeMainFile);
 
       final typstExecutable = await _getTypstExecutable();
-      final result = await Process.run(
-        typstExecutable,
-        [
-          'query',
-          probeMainRel,
-          '<$_syncResultLabel>',
-          '--field',
-          'value',
-          '--one',
-          '--format',
-          'json',
-        ],
-        workingDirectory: root,
-      );
+      final result = await Process.run(typstExecutable, [
+        'query',
+        probeMainRel,
+        '<$_syncResultLabel>',
+        '--field',
+        'value',
+        '--one',
+        '--format',
+        'json',
+      ], workingDirectory: root);
 
       if (result.exitCode != 0) {
-        return SyncAnchorResult(const [],
-            error: 'query failed: ${_firstLine(result.stderr.toString())}');
+        return SyncAnchorResult(
+          const [],
+          error: 'query failed: ${_firstLine(result.stderr.toString())}',
+        );
       }
 
       final decoded = jsonDecode(result.stdout.toString());
@@ -250,12 +247,14 @@ class TypstCompiler {
         if (c is! num || l is! num || page is! num || y is! num) continue;
         final filePath = indexToPath[c.toInt()];
         if (filePath == null) continue;
-        anchors.add(SyncAnchor(
-          filePath: filePath,
-          line: l.toInt(),
-          page: page.toInt(),
-          y: y.toDouble(),
-        ));
+        anchors.add(
+          SyncAnchor(
+            filePath: filePath,
+            line: l.toInt(),
+            page: page.toInt(),
+            y: y.toDouble(),
+          ),
+        );
       }
       return SyncAnchorResult(anchors);
     } catch (e) {
@@ -379,8 +378,9 @@ class TypstCompiler {
     try {
       final imagesDir = Directory(path.join(projectPath, 'images'));
       final hasImages = await imagesDir.exists();
-      final usesCompat =
-          await File(path.join(projectPath, 'pandoc-compat.typ')).exists();
+      final usesCompat = await File(
+        path.join(projectPath, 'pandoc-compat.typ'),
+      ).exists();
       if (!hasImages && !usesCompat) return;
 
       final relPaths = <String>[];
@@ -388,8 +388,12 @@ class TypstCompiler {
         await for (final entity in imagesDir.list(recursive: true)) {
           if (entity is File) {
             final ext = path.extension(entity.path).toLowerCase();
-            if (ext == '.png' || ext == '.jpg' || ext == '.jpeg' ||
-                ext == '.gif' || ext == '.svg' || ext == '.webp') {
+            if (ext == '.png' ||
+                ext == '.jpg' ||
+                ext == '.jpeg' ||
+                ext == '.gif' ||
+                ext == '.svg' ||
+                ext == '.webp') {
               // Relative to the project root, with forward slashes for Typst.
               final rel = path
                   .relative(entity.path, from: projectPath)

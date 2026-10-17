@@ -6,7 +6,7 @@ part 'compilation_result.g.dart';
 /// Result of a Typst compilation operation
 @freezed
 sealed class CompilationResult with _$CompilationResult {
-  const CompilationResult._();  // Private constructor for custom methods
+  const CompilationResult._(); // Private constructor for custom methods
 
   const factory CompilationResult.success({
     required String pdfPath,

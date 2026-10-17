@@ -8,25 +8,39 @@ void main() {
   // Two files of TODOs across two users and two languages.
   final todos = <String, List<TodoItem>>{
     'chapters/01.typ': [
-      const TodoItem(line: 3, message: 'intro', user: 'jo', blockId: 'p1', lang: 'es'),
+      const TodoItem(
+        line: 3,
+        message: 'intro',
+        user: 'jo',
+        blockId: 'p1',
+        lang: 'es',
+      ),
       const TodoItem(line: 9, message: 'general note'), // unassigned, doc-level
     ],
     'chapters/02.typ': [
-      const TodoItem(line: 5, message: 'check term', user: 'maria', blockId: 'p2', lang: 'fr'),
+      const TodoItem(
+        line: 5,
+        message: 'check term',
+        user: 'maria',
+        blockId: 'p2',
+        lang: 'fr',
+      ),
     ],
   };
 
   // One file with a stale `es` translation: editing en made es stale.
   final translationFiles = <String, TranslationFileState>{
-    'chapters/01.typ': const TranslationFileState(blocks: {
-      'p1': TranslationBlockState(
-        latestToken: 't2',
-        langs: {
-          'en': TranslationLangState(hash: 'a', token: 't2'),
-          'es': TranslationLangState(hash: 'b', token: 't1'), // stale
-        },
-      ),
-    }),
+    'chapters/01.typ': const TranslationFileState(
+      blocks: {
+        'p1': TranslationBlockState(
+          latestToken: 't2',
+          langs: {
+            'en': TranslationLangState(hash: 'a', token: 't2'),
+            'es': TranslationLangState(hash: 'b', token: 't1'), // stale
+          },
+        ),
+      },
+    ),
   };
 
   group('option sources', () {

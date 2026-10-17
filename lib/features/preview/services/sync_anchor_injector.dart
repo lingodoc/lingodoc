@@ -94,7 +94,11 @@ class SyncAnchorInjector {
   /// Mark paragraph/heading starts inside the content block opened at
   /// [openerIdx]. Only lines at the block's top content depth (1) qualify.
   void _scanBlock(
-      List<String> lines, int openerIdx, int colonIdx, Set<int> markerBefore) {
+    List<String> lines,
+    int openerIdx,
+    int colonIdx,
+    Set<int> markerBefore,
+  ) {
     final end = _blockEndExclusive(lines, openerIdx, colonIdx);
     _scanRange(lines, openerIdx, colonIdx, end, markerBefore, topLevel: false);
   }
@@ -104,8 +108,14 @@ class SyncAnchorInjector {
   ///
   /// [topLevel] true means a plain file: prose sits at depth 0. Otherwise the
   /// content is inside a `[ ... ]` block, so prose sits at depth 1.
-  void _scanRange(List<String> lines, int openerIdx, int colonIdx, int end,
-      Set<int> markerBefore, {required bool topLevel}) {
+  void _scanRange(
+    List<String> lines,
+    int openerIdx,
+    int colonIdx,
+    int end,
+    Set<int> markerBefore, {
+    required bool topLevel,
+  }) {
     final contentDepth = topLevel ? 0 : 1;
     var depth = 0;
     var started = topLevel; // plain files start "open"
@@ -124,10 +134,12 @@ class SyncAnchorInjector {
       final isStructuralOpener = !topLevel && j == openerIdx;
       // A line that opens with a closing bracket/paren closes a construct (e.g.
       // the block's own `],`); it is structure, not a paragraph.
-      final isCloser = trimmed.startsWith(']') ||
+      final isCloser =
+          trimmed.startsWith(']') ||
           trimmed.startsWith(')') ||
           trimmed.startsWith('}');
-      final canMarkHere = !isStructuralOpener &&
+      final canMarkHere =
+          !isStructuralOpener &&
           !isCloser &&
           started &&
           !inRaw &&

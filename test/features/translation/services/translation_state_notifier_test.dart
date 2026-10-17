@@ -94,14 +94,26 @@ void main() {
   test('markReviewedAction clears a stale flag', () async {
     await notifier().loadForProject(tempDir.path);
     notifier().onFileSaved(
-        chapterPath(), '#let para-001 = (\n  en: [a],\n  fr: [b],\n)\n');
+      chapterPath(),
+      '#let para-001 = (\n  en: [a],\n  fr: [b],\n)\n',
+    );
     notifier().onFileSaved(
-        chapterPath(), '#let para-001 = (\n  en: [a2],\n  fr: [b],\n)\n');
-    expect(totalStaleForFile(
-        container.read(translationStateProvider).files[relPath()]), 1);
+      chapterPath(),
+      '#let para-001 = (\n  en: [a2],\n  fr: [b],\n)\n',
+    );
+    expect(
+      totalStaleForFile(
+        container.read(translationStateProvider).files[relPath()],
+      ),
+      1,
+    );
 
     notifier().markReviewedAction(relPath(), 'para-001', 'fr');
-    expect(totalStaleForFile(
-        container.read(translationStateProvider).files[relPath()]), 0);
+    expect(
+      totalStaleForFile(
+        container.read(translationStateProvider).files[relPath()],
+      ),
+      0,
+    );
   });
 }

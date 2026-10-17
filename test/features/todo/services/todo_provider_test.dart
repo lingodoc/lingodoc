@@ -38,33 +38,36 @@ void main() {
 
   TodoNotifier notifier() => container.read(todoProvider.notifier);
 
-  test('loadForProject aggregates todos across files and skips clean ones',
-      () async {
-    await File('${tempDir.path}/main.typ').writeAsString(
-      '// todo: top level\n#let x = 1\n',
-    );
-    await File('${tempDir.path}/chapters/01.typ').writeAsString(
-      '#let p1 = (\n  en: [Hi],\n  es: [\n    Hola\n    // todo(jo): revisar\n  ],\n)\n',
-    );
-    await File('${tempDir.path}/chapters/02.typ').writeAsString(
-      '#let p2 = (\n  en: [Clean],\n)\n', // no markers
-    );
+  test(
+    'loadForProject aggregates todos across files and skips clean ones',
+    () async {
+      await File(
+        '${tempDir.path}/main.typ',
+      ).writeAsString('// todo: top level\n#let x = 1\n');
+      await File('${tempDir.path}/chapters/01.typ').writeAsString(
+        '#let p1 = (\n  en: [Hi],\n  es: [\n    Hola\n    // todo(jo): revisar\n  ],\n)\n',
+      );
+      await File('${tempDir.path}/chapters/02.typ').writeAsString(
+        '#let p2 = (\n  en: [Clean],\n)\n', // no markers
+      );
 
-    await notifier().loadForProject(tempDir.path);
-    final state = container.read(todoProvider);
+      await notifier().loadForProject(tempDir.path);
+      final state = container.read(todoProvider);
 
-    expect(state.keys.toSet(), {'main.typ', 'chapters/01.typ'});
-    expect(state['main.typ']!.single.message, 'top level');
-    final esTodo = state['chapters/01.typ']!.single;
-    expect(esTodo.user, 'jo');
-    expect(esTodo.lang, 'es');
-    expect(esTodo.blockId, 'p1');
-  });
+      expect(state.keys.toSet(), {'main.typ', 'chapters/01.typ'});
+      expect(state['main.typ']!.single.message, 'top level');
+      final esTodo = state['chapters/01.typ']!.single;
+      expect(esTodo.user, 'jo');
+      expect(esTodo.lang, 'es');
+      expect(esTodo.blockId, 'p1');
+    },
+  );
 
   test('loadForProject skips the output directory', () async {
     await Directory('${tempDir.path}/output').create(recursive: true);
-    await File('${tempDir.path}/output/build.typ')
-        .writeAsString('// todo: generated, ignore me\n');
+    await File(
+      '${tempDir.path}/output/build.typ',
+    ).writeAsString('// todo: generated, ignore me\n');
 
     await notifier().loadForProject(tempDir.path);
     expect(container.read(todoProvider), isEmpty);

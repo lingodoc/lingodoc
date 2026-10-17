@@ -139,7 +139,9 @@ class ChapterSplitService {
     // Section-boundary candidate units: those whose first heading is level ≤ 3.
     bool isSectionStart(int unitIndex) {
       final from = units[unitIndex];
-      final to = unitIndex + 1 < units.length ? units[unitIndex + 1] : lines.length;
+      final to = unitIndex + 1 < units.length
+          ? units[unitIndex + 1]
+          : lines.length;
       for (var i = from; i < to; i++) {
         final m = _heading.firstMatch(lines[i]);
         if (m != null) return m.group(1)!.length <= 3;
@@ -276,10 +278,15 @@ class ChapterSplitService {
     final mainPath = path.join(projectPath, 'main.typ');
     final mainFile = File(mainPath);
     if (await mainFile.exists()) {
-      final currentRel = _posix(path.relative(currentFilePath, from: projectPath));
+      final currentRel = _posix(
+        path.relative(currentFilePath, from: projectPath),
+      );
       final newRel = _posix(path.relative(newPath, from: projectPath));
-      final (rewritten, found) =
-          insertInclude(await mainFile.readAsString(), currentRel, newRel);
+      final (rewritten, found) = insertInclude(
+        await mainFile.readAsString(),
+        currentRel,
+        newRel,
+      );
       if (found) {
         await mainFile.writeAsString(rewritten);
         includeUpdated = true;
@@ -314,11 +321,13 @@ class ChapterSplitService {
         if (m != null) {
           final level = m.group(1)!.length;
           if (level <= 3) {
-            sections.add(ChapterSection(
-              unitStartLine: from,
-              level: level,
-              heading: lines[i].substring(m.end - 1).trim(),
-            ));
+            sections.add(
+              ChapterSection(
+                unitStartLine: from,
+                level: level,
+                heading: lines[i].substring(m.end - 1).trim(),
+              ),
+            );
           }
           break; // only the unit's first heading matters
         }
@@ -330,9 +339,14 @@ class ChapterSplitService {
   /// Plan a multi-way split: [selectedUnitStartLines] are the unit-start lines
   /// (from [listSections]) that should each begin a new file. The content before
   /// the first selected boundary stays in the original.
-  MultiSplitPlan computeMultiSplit(String text, Set<int> selectedUnitStartLines) {
+  MultiSplitPlan computeMultiSplit(
+    String text,
+    Set<int> selectedUnitStartLines,
+  ) {
     if (selectedUnitStartLines.isEmpty) {
-      return MultiSplitPlan.invalid('Select at least one section to split off.');
+      return MultiSplitPlan.invalid(
+        'Select at least one section to split off.',
+      );
     }
     final lines = text.split('\n');
     final lineStart = List<int>.filled(lines.length, 0);
@@ -389,8 +403,9 @@ class ChapterSplitService {
     final parts = <({String heading, String content})>[];
     for (var k = 0; k < selected.length; k++) {
       final startOffset = lineStart[cuts[k]];
-      final endOffset =
-          k + 1 < selected.length ? lineStart[cuts[k + 1]] : text.length;
+      final endOffset = k + 1 < selected.length
+          ? lineStart[cuts[k + 1]]
+          : text.length;
       final segment = text.substring(startOffset, endOffset);
       parts.add((heading: headingAt(selected[k]), content: header + segment));
     }
@@ -410,10 +425,9 @@ class ChapterSplitService {
     for (var i = 0; i < lines.length; i++) {
       if (lines[i].trim() == target) {
         final indent = lines[i].substring(0, lines[i].indexOf('#'));
-        lines.insertAll(
-          i + 1,
-          [for (final r in newRels) '$indent#include "$r"'],
-        );
+        lines.insertAll(i + 1, [
+          for (final r in newRels) '$indent#include "$r"',
+        ]);
         return (lines.join('\n'), true);
       }
     }
@@ -440,7 +454,9 @@ class ChapterSplitService {
         throw ArgumentError('Filename "$name" must end with ".typ".');
       }
       if (name.contains('/') || name.contains('\\') || name.contains('..')) {
-        throw ArgumentError('Filename "$name" must not contain path separators.');
+        throw ArgumentError(
+          'Filename "$name" must not contain path separators.',
+        );
       }
       if (!seen.add(name)) {
         throw ArgumentError('Duplicate filename "$name".');
@@ -458,13 +474,18 @@ class ChapterSplitService {
     var includeUpdated = false;
     final mainFile = File(path.join(projectPath, 'main.typ'));
     if (await mainFile.exists()) {
-      final currentRel = _posix(path.relative(currentFilePath, from: projectPath));
+      final currentRel = _posix(
+        path.relative(currentFilePath, from: projectPath),
+      );
       final newRels = [
         for (final f in files)
-          _posix(path.relative(path.join(dir, f.fileName), from: projectPath))
+          _posix(path.relative(path.join(dir, f.fileName), from: projectPath)),
       ];
-      final (rewritten, found) =
-          insertIncludes(await mainFile.readAsString(), currentRel, newRels);
+      final (rewritten, found) = insertIncludes(
+        await mainFile.readAsString(),
+        currentRel,
+        newRels,
+      );
       if (found) {
         await mainFile.writeAsString(rewritten);
         includeUpdated = true;

@@ -57,12 +57,19 @@ class _TypstInstallDialogState extends ConsumerState<TypstInstallDialog> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
+                    Icon(
+                      Icons.info_outline,
+                      color: Colors.blue.shade700,
+                      size: 20,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Note: You may need to restart your terminal or IDE after installation to use Typst from the command line.',
-                        style: TextStyle(fontSize: 12, color: Colors.blue.shade900),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue.shade900,
+                        ),
                       ),
                     ),
                   ],
@@ -72,7 +79,10 @@ class _TypstInstallDialogState extends ConsumerState<TypstInstallDialog> {
             if (_isInstalling) ...[
               Text(
                 _statusMessage,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               const SizedBox(height: 16),
               LinearProgressIndicator(
@@ -96,7 +106,11 @@ class _TypstInstallDialogState extends ConsumerState<TypstInstallDialog> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.check_circle, color: Colors.green.shade700, size: 32),
+                    Icon(
+                      Icons.check_circle,
+                      color: Colors.green.shade700,
+                      size: 32,
+                    ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
@@ -113,7 +127,10 @@ class _TypstInstallDialogState extends ConsumerState<TypstInstallDialog> {
                           const SizedBox(height: 4),
                           Text(
                             'Typst compiler is now ready to use.',
-                            style: TextStyle(fontSize: 14, color: Colors.green.shade900),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.green.shade900,
+                            ),
                           ),
                         ],
                       ),
@@ -133,7 +150,11 @@ class _TypstInstallDialogState extends ConsumerState<TypstInstallDialog> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.error_outline, color: Colors.red.shade700, size: 24),
+                    Icon(
+                      Icons.error_outline,
+                      color: Colors.red.shade700,
+                      size: 24,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -150,7 +171,10 @@ class _TypstInstallDialogState extends ConsumerState<TypstInstallDialog> {
                           const SizedBox(height: 4),
                           Text(
                             _errorMessage!,
-                            style: TextStyle(fontSize: 12, color: Colors.red.shade900),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.red.shade900,
+                            ),
                           ),
                         ],
                       ),
@@ -190,9 +214,7 @@ class _TypstInstallDialogState extends ConsumerState<TypstInstallDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('• ', style: TextStyle(fontSize: 14)),
-          Expanded(
-            child: Text(text, style: const TextStyle(fontSize: 13)),
-          ),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
         ],
       ),
     );

@@ -15,25 +15,16 @@ final Mode typstMode = Mode(
   case_insensitive: false,
   keywords: {
     'keyword': 'let if else for while import include show set',
-    'built_in': 'strong emph text image table figure quote cite ref link heading list enum grid box rect circle ellipse line polygon path',
+    'built_in':
+        'strong emph text image table figure quote cite ref link heading list enum grid box rect circle ellipse line polygon path',
     'literal': 'true false none auto',
   },
   contains: [
     // Single-line comments: // comment
-    Mode(
-      className: 'comment',
-      begin: r'//',
-      end: r'$',
-      relevance: 0,
-    ),
+    Mode(className: 'comment', begin: r'//', end: r'$', relevance: 0),
 
     // Multi-line comments: /* comment */
-    Mode(
-      className: 'comment',
-      begin: r'/\*',
-      end: r'\*/',
-      relevance: 0,
-    ),
+    Mode(className: 'comment', begin: r'/\*', end: r'\*/', relevance: 0),
 
     // Double-quoted strings: "text"
     Mode(
@@ -41,16 +32,12 @@ final Mode typstMode = Mode(
       begin: '"',
       end: '"',
       contains: [
-        Mode(begin: r'\\.') // Escape sequences
+        Mode(begin: r'\\.'), // Escape sequences
       ],
     ),
 
     // Raw strings (backticks): `raw text`
-    Mode(
-      className: 'string',
-      begin: '`',
-      end: '`',
-    ),
+    Mode(className: 'string', begin: '`', end: '`'),
 
     // Functions and commands: #function-name
     Mode(
@@ -60,26 +47,12 @@ final Mode typstMode = Mode(
     ),
 
     // Content blocks: [content]
-    Mode(
-      className: 'section',
-      begin: r'\[',
-      end: r'\]',
-      relevance: 0,
-    ),
+    Mode(className: 'section', begin: r'\[', end: r'\]', relevance: 0),
 
     // Math mode: $x^2$
-    Mode(
-      className: 'formula',
-      begin: r'\$',
-      end: r'\$',
-      relevance: 0,
-    ),
+    Mode(className: 'formula', begin: r'\$', end: r'\$', relevance: 0),
 
     // Numbers
-    Mode(
-      className: 'number',
-      begin: r'\b\d+\.?\d*',
-      relevance: 0,
-    ),
+    Mode(className: 'number', begin: r'\b\d+\.?\d*', relevance: 0),
   ],
 );

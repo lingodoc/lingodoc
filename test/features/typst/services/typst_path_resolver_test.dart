@@ -63,25 +63,30 @@ void main() {
 
       // Second call should be significantly faster (cache hit)
       // Allow some tolerance for system variance
-      expect(secondCallDuration < firstCallDuration ~/ 2, isTrue,
-          reason:
-              'Second call ($secondCallDuration μs) should be much faster than first ($firstCallDuration μs)');
+      expect(
+        secondCallDuration < firstCallDuration ~/ 2,
+        isTrue,
+        reason:
+            'Second call ($secondCallDuration μs) should be much faster than first ($firstCallDuration μs)',
+      );
     });
 
-    test('findExecutable - handles platform-specific paths correctly',
-        () async {
-      final path = await resolver.findExecutable();
+    test(
+      'findExecutable - handles platform-specific paths correctly',
+      () async {
+        final path = await resolver.findExecutable();
 
-      if (path != null) {
-        if (Platform.isWindows) {
-          // Windows should return either 'typst' or a path ending in .exe
-          expect(path == 'typst' || path.endsWith('.exe'), isTrue);
-        } else {
-          // Unix-like systems should return 'typst' or an absolute path
-          expect(path == 'typst' || path.startsWith('/'), isTrue);
+        if (path != null) {
+          if (Platform.isWindows) {
+            // Windows should return either 'typst' or a path ending in .exe
+            expect(path == 'typst' || path.endsWith('.exe'), isTrue);
+          } else {
+            // Unix-like systems should return 'typst' or an absolute path
+            expect(path == 'typst' || path.startsWith('/'), isTrue);
+          }
         }
-      }
-    });
+      },
+    );
 
     test('clearCache - allows detection of newly installed binary', () async {
       // Initial detection
@@ -117,15 +122,17 @@ void main() {
       }
     });
 
-    test('findExecutable - handles missing HOME environment gracefully',
-        () async {
-      // This test verifies the resolver doesn't crash when HOME is not set
-      // In a real test, we'd mock the environment variables
-      final path = await resolver.findExecutable();
+    test(
+      'findExecutable - handles missing HOME environment gracefully',
+      () async {
+        // This test verifies the resolver doesn't crash when HOME is not set
+        // In a real test, we'd mock the environment variables
+        final path = await resolver.findExecutable();
 
-      // Should either find typst or return null, but not throw
-      expect(path, anyOf(isNull, isA<String>()));
-    });
+        // Should either find typst or return null, but not throw
+        expect(path, anyOf(isNull, isA<String>()));
+      },
+    );
 
     test('findExecutable - handles timeout scenarios gracefully', () async {
       // The implementation has a 5-second timeout for Process.run
@@ -135,8 +142,11 @@ void main() {
       stopwatch.stop();
 
       // Should complete well within timeout (5 seconds = 5,000,000 microseconds)
-      expect(stopwatch.elapsedMicroseconds < 6000000, isTrue,
-          reason: 'findExecutable should complete within timeout');
+      expect(
+        stopwatch.elapsedMicroseconds < 6000000,
+        isTrue,
+        reason: 'findExecutable should complete within timeout',
+      );
     });
   });
 }

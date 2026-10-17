@@ -58,9 +58,12 @@ class _ScreenPickerDialogState extends ConsumerState<ScreenPickerDialog> {
             else
               Expanded(
                 child: screensAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Center(child: Text('Error loading screens: $e')),
-                  data: (screens) => _buildContent(context, theme, screens, libraryPath),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (e, _) =>
+                      Center(child: Text('Error loading screens: $e')),
+                  data: (screens) =>
+                      _buildContent(context, theme, screens, libraryPath),
                 ),
               ),
             _buildFooter(context, theme),
@@ -70,7 +73,11 @@ class _ScreenPickerDialogState extends ConsumerState<ScreenPickerDialog> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, ThemeData theme, String? libraryPath) {
+  Widget _buildHeader(
+    BuildContext context,
+    ThemeData theme,
+    String? libraryPath,
+  ) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 16, 12),
       decoration: BoxDecoration(
@@ -83,7 +90,9 @@ class _ScreenPickerDialogState extends ConsumerState<ScreenPickerDialog> {
           const SizedBox(width: 10),
           Text(
             'Insert Screen',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(width: 20),
           if (libraryPath != null)
@@ -124,8 +133,11 @@ class _ScreenPickerDialogState extends ConsumerState<ScreenPickerDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.folder_off_outlined,
-                size: 48, color: theme.colorScheme.outline),
+            Icon(
+              Icons.folder_off_outlined,
+              size: 48,
+              color: theme.colorScheme.outline,
+            ),
             const SizedBox(height: 16),
             Text(
               'No screen library configured',
@@ -180,21 +192,20 @@ class _ScreenPickerDialogState extends ConsumerState<ScreenPickerDialog> {
                     mainAxisSpacing: 8,
                   ),
                   itemCount: filtered.length,
-                  itemBuilder: (context, i) =>
-                      _ScreenCard(
-                        entry: filtered[i],
-                        isSelected: _selected?.number == filtered[i].number,
-                        onTap: () => setState(() {
-                          _selected = filtered[i];
-                          // default to first available language
-                          if (!filtered[i].availableLanguages
-                              .contains(_previewLang)) {
-                            _previewLang =
-                                filtered[i].availableLanguages.firstOrNull ??
-                                    'nl';
-                          }
-                        }),
-                      ),
+                  itemBuilder: (context, i) => _ScreenCard(
+                    entry: filtered[i],
+                    isSelected: _selected?.number == filtered[i].number,
+                    onTap: () => setState(() {
+                      _selected = filtered[i];
+                      // default to first available language
+                      if (!filtered[i].availableLanguages.contains(
+                        _previewLang,
+                      )) {
+                        _previewLang =
+                            filtered[i].availableLanguages.firstOrNull ?? 'nl';
+                      }
+                    }),
+                  ),
                 ),
         ),
 
@@ -236,17 +247,17 @@ class _ScreenPickerDialogState extends ConsumerState<ScreenPickerDialog> {
           ),
           if (entry.title.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(
-              entry.title,
-              style: theme.textTheme.bodyMedium,
-            ),
+            Text(entry.title, style: theme.textTheme.bodyMedium),
           ],
           const SizedBox(height: 16),
 
           // Language selector
-          Text('Preview language',
-              style: theme.textTheme.labelSmall
-                  ?.copyWith(color: theme.colorScheme.outline)),
+          Text(
+            'Preview language',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.outline,
+            ),
+          ),
           const SizedBox(height: 6),
           Wrap(
             spacing: 6,
@@ -311,8 +322,9 @@ class _ScreenPickerDialogState extends ConsumerState<ScreenPickerDialog> {
           // Available languages info
           Text(
             'Available: ${entry.availableLanguages.join(', ')}',
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.outline),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.outline,
+            ),
           ),
         ],
       ),
@@ -361,8 +373,9 @@ class _ScreenPickerDialogState extends ConsumerState<ScreenPickerDialog> {
       dialogTitle: 'Select HTML Screen Library Folder',
     );
     if (result != null) {
-      final current = ref.read(userPreferencesProvider).asData?.value
-          ?? const UserPreferences();
+      final current =
+          ref.read(userPreferencesProvider).asData?.value ??
+          const UserPreferences();
       await ref
           .read(userPreferencesProvider.notifier)
           .updatePreferences(current.copyWith(screenLibraryPath: result));
@@ -393,9 +406,7 @@ class _ScreenCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: isSelected
-                ? theme.colorScheme.primary
-                : theme.dividerColor,
+            color: isSelected ? theme.colorScheme.primary : theme.dividerColor,
             width: isSelected ? 2 : 1,
           ),
           color: isSelected

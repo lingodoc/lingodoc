@@ -6,7 +6,7 @@ part 'preview_state.g.dart';
 /// State model for PDF preview panel
 @freezed
 sealed class PreviewState with _$PreviewState {
-  const PreviewState._();  // Private constructor for Freezed
+  const PreviewState._(); // Private constructor for Freezed
 
   const factory PreviewState({
     /// Currently displayed PDF file path

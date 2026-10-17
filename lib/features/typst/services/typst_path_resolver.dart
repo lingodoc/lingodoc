@@ -21,13 +21,13 @@ class TypstPathResolver {
 
     // Try system PATH first
     try {
-      final result = await Process.run(
-        Platform.isWindows ? 'where' : 'which',
-        ['typst'],
-      ).timeout(
-        const Duration(seconds: 5),
-        onTimeout: () => ProcessResult(0, 1, '', 'timeout'),
-      );
+      final result =
+          await Process.run(Platform.isWindows ? 'where' : 'which', [
+            'typst',
+          ]).timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => ProcessResult(0, 1, '', 'timeout'),
+          );
       if (result.exitCode == 0) {
         _cachedPath = 'typst';
         return _cachedPath;

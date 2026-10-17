@@ -58,10 +58,7 @@ class SearchNotifier extends Notifier<SearchState> {
 
   /// Update match counts
   void setMatches(int current, int total) {
-    state = state.copyWith(
-      currentMatchIndex: current,
-      totalMatches: total,
-    );
+    state = state.copyWith(currentMatchIndex: current, totalMatches: total);
   }
 
   /// Toggle case sensitivity

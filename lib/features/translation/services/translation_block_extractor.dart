@@ -54,8 +54,7 @@ class TranslationBlockExtractor {
 
   /// `#let <name> = (` — a dict-literal block. Plain `#let x = [...]` or
   /// function definitions do not match and are skipped.
-  static final RegExp _dictUnit =
-      RegExp(r'^#let\s+([A-Za-z0-9_\-]+)\s*=\s*\(');
+  static final RegExp _dictUnit = RegExp(r'^#let\s+([A-Za-z0-9_\-]+)\s*=\s*\(');
 
   /// Extract every translation block from [fileText]. Only languages in
   /// [languageCodes] are considered; a block with none of them is skipped.
@@ -76,11 +75,13 @@ class TranslationBlockExtractor {
     final blocks = <TranslationBlock>[];
     for (final e in byBlock.entries) {
       if (e.value.values.isNotEmpty) {
-        blocks.add(TranslationBlock(
-          blockId: e.key,
-          startLine: e.value.startLine,
-          values: e.value.values,
-        ));
+        blocks.add(
+          TranslationBlock(
+            blockId: e.key,
+            startLine: e.value.startLine,
+            values: e.value.values,
+          ),
+        );
       }
     }
     return blocks;
@@ -91,14 +92,18 @@ class TranslationBlockExtractor {
   /// `(blockId, lang)` it sits inside. Shares the same bracket-depth scan as
   /// [extract].
   List<TranslationLangSpan> extractSpans(
-      String fileText, List<String> languageCodes) {
+    String fileText,
+    List<String> languageCodes,
+  ) {
     return _scan(fileText, languageCodes)
-        .map((h) => TranslationLangSpan(
-              blockId: h.blockId,
-              lang: h.lang,
-              startLine: h.startLine,
-              endLine: h.endLine,
-            ))
+        .map(
+          (h) => TranslationLangSpan(
+            blockId: h.blockId,
+            lang: h.lang,
+            startLine: h.startLine,
+            endLine: h.endLine,
+          ),
+        )
         .toList();
   }
 
@@ -107,14 +112,16 @@ class TranslationBlockExtractor {
   /// span. Inner value text can never be mistaken for another opener because
   /// each value body is skipped after extraction.
   List<
-      ({
-        String blockId,
-        int blockStart,
-        String lang,
-        String value,
-        int startLine,
-        int endLine,
-      })> _scan(String fileText, List<String> languageCodes) {
+    ({
+      String blockId,
+      int blockStart,
+      String lang,
+      String value,
+      int startLine,
+      int endLine,
+    })
+  >
+  _scan(String fileText, List<String> languageCodes) {
     if (languageCodes.isEmpty) return const [];
     final lines = fileText.split('\n');
 
@@ -128,14 +135,17 @@ class TranslationBlockExtractor {
     final codeAlt = languageCodes.map(RegExp.escape).join('|');
     final anyOpener = RegExp('(^|[\\s(,])($codeAlt)\\s*:\\s*\\[');
 
-    final hits = <({
-      String blockId,
-      int blockStart,
-      String lang,
-      String value,
-      int startLine,
-      int endLine,
-    })>[];
+    final hits =
+        <
+          ({
+            String blockId,
+            int blockStart,
+            String lang,
+            String value,
+            int startLine,
+            int endLine,
+          })
+        >[];
     for (var u = 0; u < unitLines.length; u++) {
       final start = unitLines[u];
       final end = u + 1 < unitLines.length ? unitLines[u + 1] : lines.length;
@@ -215,8 +225,13 @@ class TranslationBlockExtractor {
   /// without semantic change still avoids false "stale" flags while real edits
   /// are detected.
   String _normalize(String raw) {
-    final lines = raw.replaceAll('\r\n', '\n').replaceAll('\r', '\n').split('\n');
-    final trimmed = lines.map((l) => l.replaceAll(RegExp(r'\s+$'), '')).join('\n');
+    final lines = raw
+        .replaceAll('\r\n', '\n')
+        .replaceAll('\r', '\n')
+        .split('\n');
+    final trimmed = lines
+        .map((l) => l.replaceAll(RegExp(r'\s+$'), ''))
+        .join('\n');
     return trimmed.trim();
   }
 }

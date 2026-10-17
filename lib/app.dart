@@ -23,11 +23,7 @@ class LingoDocApp extends ConsumerWidget {
       ),
       loading: () => MaterialApp(
         theme: AppTheme.darkTheme,
-        home: const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
-          ),
-        ),
+        home: const Scaffold(body: Center(child: CircularProgressIndicator())),
       ),
       error: (e, s) => MaterialApp(
         theme: AppTheme.darkTheme,

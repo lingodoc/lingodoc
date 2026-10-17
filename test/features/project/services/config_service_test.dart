@@ -65,18 +65,23 @@ compile_debounce_ms = 500
       expect(config.projectSettings.compileDebounceMs, 500);
     });
 
-    test('loadConfig - throws FileSystemException when file does not exist', () async {
-      // Act & Assert
-      expect(
-        () => configService.loadConfig(tempDir.path),
-        throwsA(isA<FileSystemException>()),
-      );
-    });
+    test(
+      'loadConfig - throws FileSystemException when file does not exist',
+      () async {
+        // Act & Assert
+        expect(
+          () => configService.loadConfig(tempDir.path),
+          throwsA(isA<FileSystemException>()),
+        );
+      },
+    );
 
-    test('loadConfig - throws FormatException when languages array is missing', () async {
-      // Arrange
-      final configFile = File('${tempDir.path}/config.toml');
-      await configFile.writeAsString('''
+    test(
+      'loadConfig - throws FormatException when languages array is missing',
+      () async {
+        // Arrange
+        final configFile = File('${tempDir.path}/config.toml');
+        await configFile.writeAsString('''
 [editor_settings]
 theme = "vs-dark"
 
@@ -84,33 +89,39 @@ theme = "vs-dark"
 default_language = { code = "en", name = "English" }
 ''');
 
-      // Act & Assert
-      expect(
-        () => configService.loadConfig(tempDir.path),
-        throwsA(isA<FormatException>()),
-      );
-    });
+        // Act & Assert
+        expect(
+          () => configService.loadConfig(tempDir.path),
+          throwsA(isA<FormatException>()),
+        );
+      },
+    );
 
-    test('loadConfig - throws FormatException when project_settings is missing', () async {
-      // Arrange
-      final configFile = File('${tempDir.path}/config.toml');
-      await configFile.writeAsString('''
+    test(
+      'loadConfig - throws FormatException when project_settings is missing',
+      () async {
+        // Arrange
+        final configFile = File('${tempDir.path}/config.toml');
+        await configFile.writeAsString('''
 [[languages]]
 code = "en"
 name = "English"
 ''');
 
-      // Act & Assert
-      expect(
-        () => configService.loadConfig(tempDir.path),
-        throwsA(isA<FormatException>()),
-      );
-    });
+        // Act & Assert
+        expect(
+          () => configService.loadConfig(tempDir.path),
+          throwsA(isA<FormatException>()),
+        );
+      },
+    );
 
-    test('loadConfig - uses defaults when optional fields are missing', () async {
-      // Arrange
-      final configFile = File('${tempDir.path}/config.toml');
-      await configFile.writeAsString('''
+    test(
+      'loadConfig - uses defaults when optional fields are missing',
+      () async {
+        // Arrange
+        final configFile = File('${tempDir.path}/config.toml');
+        await configFile.writeAsString('''
 [[languages]]
 code = "en"
 name = "English"
@@ -119,17 +130,18 @@ name = "English"
 default_language = { code = "en", name = "English" }
 ''');
 
-      // Act
-      final config = await configService.loadConfig(tempDir.path);
+        // Act
+        final config = await configService.loadConfig(tempDir.path);
 
-      // Assert
-      expect(config.languageOrder, ['en']); // Derived from languages
-      expect(config.viewMode, 'Sequential'); // Default
-      expect(config.editorSettings.theme, 'vs-dark'); // Default
-      expect(config.projectSettings.outputDirectory, 'output'); // Default
-      expect(config.projectSettings.autoCompile, true); // Default
-      expect(config.projectSettings.compileDebounceMs, 500); // Default
-    });
+        // Assert
+        expect(config.languageOrder, ['en']); // Derived from languages
+        expect(config.viewMode, 'Sequential'); // Default
+        expect(config.editorSettings.theme, 'vs-dark'); // Default
+        expect(config.projectSettings.outputDirectory, 'output'); // Default
+        expect(config.projectSettings.autoCompile, true); // Default
+        expect(config.projectSettings.compileDebounceMs, 500); // Default
+      },
+    );
 
     test('saveConfig - successfully writes config to file', () async {
       // Arrange

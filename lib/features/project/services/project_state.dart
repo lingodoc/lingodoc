@@ -107,10 +107,7 @@ class ProjectTreeNotifier extends Notifier<ProjectTreeState> {
         isLoading: false,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Failed to refresh: $e',
-      );
+      state = state.copyWith(isLoading: false, error: 'Failed to refresh: $e');
     }
   }
 
@@ -127,4 +124,6 @@ final fileSystemServiceProvider = Provider<FileSystemService>((ref) {
 
 /// Provider for project tree state
 final projectTreeProvider =
-    NotifierProvider<ProjectTreeNotifier, ProjectTreeState>(ProjectTreeNotifier.new);
+    NotifierProvider<ProjectTreeNotifier, ProjectTreeState>(
+      ProjectTreeNotifier.new,
+    );

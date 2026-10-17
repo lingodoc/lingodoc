@@ -9,7 +9,11 @@ const _knownLanguages = ['nl', 'en', 'fr', 'es', 'de', 'it'];
 
 /// Provider that exposes the screen library path from user preferences.
 final screenLibraryPathProvider = Provider<String?>((ref) {
-  final path = ref.watch(userPreferencesProvider).asData?.value.screenLibraryPath;
+  final path = ref
+      .watch(userPreferencesProvider)
+      .asData
+      ?.value
+      .screenLibraryPath;
   return (path != null && path.isNotEmpty) ? path : null;
 });
 
@@ -60,11 +64,9 @@ class ScreenLibraryService {
       // Parse title from the primary language file
       final title = await _parseTitle(file.path);
 
-      entries.add(ScreenEntry(
-        number: number,
-        title: title,
-        availableLanguages: langs,
-      ));
+      entries.add(
+        ScreenEntry(number: number, title: title, availableLanguages: langs),
+      );
     }
 
     entries.sort((a, b) => a.number.compareTo(b.number));

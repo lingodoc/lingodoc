@@ -138,7 +138,9 @@ class TimerService {
     for (final id in _timers.keys) {
       final interval = _intervals[id];
       final lastExec = _lastExecution[id];
-      buffer.writeln('  - "$id": ${interval?.inMilliseconds}ms interval, last: ${lastExec?.toString() ?? "never"}');
+      buffer.writeln(
+        '  - "$id": ${interval?.inMilliseconds}ms interval, last: ${lastExec?.toString() ?? "never"}',
+      );
     }
 
     return buffer.toString();

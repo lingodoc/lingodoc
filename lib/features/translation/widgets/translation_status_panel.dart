@@ -28,8 +28,10 @@ class TranslationStatusPanel extends ConsumerWidget {
       if (stale.isNotEmpty) staleFiles[relPath] = stale;
     }
     final relPaths = staleFiles.keys.toList()..sort();
-    final totalStale =
-        staleFiles.values.fold<int>(0, (sum, list) => sum + list.length);
+    final totalStale = staleFiles.values.fold<int>(
+      0,
+      (sum, list) => sum + list.length,
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -72,18 +74,21 @@ class TranslationStatusPanel extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.translate,
-              size: 16,
-              color: totalStale > 0
-                  ? theme.colorScheme.tertiary
-                  : theme.colorScheme.onSurfaceVariant),
+          Icon(
+            Icons.translate,
+            size: 16,
+            color: totalStale > 0
+                ? theme.colorScheme.tertiary
+                : theme.colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 8),
           Text(
             totalStale > 0
                 ? 'Translations out of date ($totalStale)'
                 : 'Translations up to date',
-            style: theme.textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const Spacer(),
           if (onClose != null)
@@ -104,14 +109,18 @@ class TranslationStatusPanel extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       child: Row(
         children: [
-          Icon(Icons.check_circle_outline,
-              size: 18, color: theme.colorScheme.onSurfaceVariant),
+          Icon(
+            Icons.check_circle_outline,
+            size: 18,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               'Every translation is in sync with its freshest sibling.',
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ],
@@ -143,14 +152,18 @@ class _FileGroup extends ConsumerWidget {
           color: theme.colorScheme.surfaceContainer,
           child: Row(
             children: [
-              Icon(Icons.description_outlined,
-                  size: 14, color: theme.colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.description_outlined,
+                size: 14,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   p.basename(relPath),
-                  style: theme.textTheme.labelMedium
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -188,8 +201,8 @@ class _StaleRow extends ConsumerWidget {
       onTap: projectPath == null
           ? null
           : () => ref
-              .read(editorProvider.notifier)
-              .openFile(p.join(projectPath!, p.normalize(relPath))),
+                .read(editorProvider.notifier)
+                .openFile(p.join(projectPath!, p.normalize(relPath))),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(28, 4, 4, 4),
         child: Row(
@@ -213,8 +226,9 @@ class _StaleRow extends ConsumerWidget {
               ),
               child: Text(
                 entry.lang,
-                style: theme.textTheme.labelSmall
-                    ?.copyWith(color: theme.colorScheme.onTertiaryContainer),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onTertiaryContainer,
+                ),
               ),
             ),
             const Spacer(),

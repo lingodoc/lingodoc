@@ -6,7 +6,7 @@ part 'editor_settings.g.dart';
 /// Editor preferences for the application.
 @freezed
 sealed class EditorSettings with _$EditorSettings {
-  const EditorSettings._();  // Private constructor for Freezed
+  const EditorSettings._(); // Private constructor for Freezed
 
   const factory EditorSettings({
     @Default('vs-dark') String theme,

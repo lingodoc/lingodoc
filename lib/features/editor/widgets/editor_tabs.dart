@@ -25,7 +25,12 @@ class EditorTabs extends ConsumerWidget {
 
     return Column(
       children: [
-        _buildTabBar(context, ref, editorState.tabs, editorState.activeTabIndex),
+        _buildTabBar(
+          context,
+          ref,
+          editorState.tabs,
+          editorState.activeTabIndex,
+        ),
         Expanded(
           child: _buildActiveEditor(context, ref, editorState.activeTab),
         ),
@@ -65,10 +70,7 @@ class EditorTabs extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 1,
-          ),
+          bottom: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
       ),
       child: ListView.builder(
@@ -95,7 +97,11 @@ class EditorTabs extends ConsumerWidget {
     return totalStaleForFile(ref.read(translationStateProvider).files[relPath]);
   }
 
-  Widget _buildActiveEditor(BuildContext context, WidgetRef ref, EditorTab? activeTab) {
+  Widget _buildActiveEditor(
+    BuildContext context,
+    WidgetRef ref,
+    EditorTab? activeTab,
+  ) {
     if (activeTab == null) {
       return _buildEmptyState(context);
     }
@@ -106,7 +112,9 @@ class EditorTabs extends ConsumerWidget {
       filePath: activeTab.filePath,
       onChanged: (content) {
         final state = ref.read(editorProvider);
-        final tabIndex = state.tabs.indexWhere((tab) => tab.filePath == activeTab.filePath);
+        final tabIndex = state.tabs.indexWhere(
+          (tab) => tab.filePath == activeTab.filePath,
+        );
         if (tabIndex != -1) {
           ref.read(editorProvider.notifier).updateTabContent(tabIndex, content);
         }
@@ -130,12 +138,17 @@ class EditorTabs extends ConsumerWidget {
     ref.read(editorProvider.notifier).closeTab(index);
   }
 
-  Future<bool?> _showUnsavedChangesDialog(BuildContext context, String fileName) {
+  Future<bool?> _showUnsavedChangesDialog(
+    BuildContext context,
+    String fileName,
+  ) {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Unsaved Changes'),
-        content: Text('Do you want to close "$fileName" without saving changes?'),
+        content: Text(
+          'Do you want to close "$fileName" without saving changes?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -188,8 +201,8 @@ class _TabItemState extends State<_TabItem> {
             color: widget.isActive
                 ? Theme.of(context).colorScheme.surface
                 : _isHovered
-                    ? Theme.of(context).colorScheme.surfaceContainerHigh
-                    : Colors.transparent,
+                ? Theme.of(context).colorScheme.surfaceContainerHigh
+                : Colors.transparent,
             border: Border(
               right: BorderSide(
                 color: Theme.of(context).dividerColor,
@@ -213,11 +226,11 @@ class _TabItemState extends State<_TabItem> {
                 child: Text(
                   widget.tab.fileName,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: widget.isActive ? FontWeight.w600 : null,
-                        color: widget.isActive
-                            ? Theme.of(context).colorScheme.onSurface
-                            : Colors.grey[700],
-                      ),
+                    fontWeight: widget.isActive ? FontWeight.w600 : null,
+                    color: widget.isActive
+                        ? Theme.of(context).colorScheme.onSurface
+                        : Colors.grey[700],
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -225,11 +238,12 @@ class _TabItemState extends State<_TabItem> {
               if (widget.staleCount > 0) ...[
                 const SizedBox(width: 4),
                 Tooltip(
-                  message:
-                      '${widget.staleCount} translation(s) out of date',
+                  message: '${widget.staleCount} translation(s) out of date',
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 1,
+                    ),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.tertiary,
                       borderRadius: BorderRadius.circular(8),
@@ -237,10 +251,10 @@ class _TabItemState extends State<_TabItem> {
                     child: Text(
                       '${widget.staleCount}',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onTertiary,
-                            fontSize: 10,
-                            height: 1.1,
-                          ),
+                        color: Theme.of(context).colorScheme.onTertiary,
+                        fontSize: 10,
+                        height: 1.1,
+                      ),
                     ),
                   ),
                 ),

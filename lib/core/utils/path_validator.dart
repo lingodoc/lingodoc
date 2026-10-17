@@ -33,7 +33,7 @@ class PathValidator {
         languageCode,
         'languageCode',
         'Invalid language code format. Expected ISO 639-1/2 format '
-        '(e.g., "en", "en-US", "fra")',
+            '(e.g., "en", "en-US", "fra")',
       );
     }
   }
@@ -75,7 +75,7 @@ class PathValidator {
         : '$normalizedBoundary${p.separator}';
 
     return normalizedTarget == normalizedBoundary ||
-           normalizedTarget.startsWith(boundaryWithSep);
+        normalizedTarget.startsWith(boundaryWithSep);
   }
 
   /// Sanitizes and validates a project path
@@ -164,11 +164,7 @@ class PathValidator {
 
     // Check for parent directory references
     if (filename == '..' || filename == '.') {
-      throw ArgumentError.value(
-        filename,
-        'filename',
-        'Invalid filename',
-      );
+      throw ArgumentError.value(filename, 'filename', 'Invalid filename');
     }
 
     // Check for null bytes
@@ -185,10 +181,7 @@ class PathValidator {
   ///
   /// Similar to sanitizeWithBoundary but specifically for output directories.
   /// Ensures the output directory is within the project boundary.
-  static String validateOutputDirectory(
-    String outputDir,
-    String projectPath,
-  ) {
+  static String validateOutputDirectory(String outputDir, String projectPath) {
     if (outputDir.isEmpty) {
       // Default to 'output' within project
       return p.join(normalize(projectPath), 'output');
