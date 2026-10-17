@@ -128,6 +128,15 @@ class _PdfViewerState extends State<PdfViewer> {
     }
   }
 
+  void _navigatePage(int delta) {
+    if (!_controller.isReady) return;
+    final total = _pageHeightsPt.length;
+    if (total == 0) return;
+    final current = _controller.pageNumber ?? 1;
+    final target = (current + delta).clamp(1, total);
+    _controller.goToPage(pageNumber: target);
+  }
+
   /// PDF → editor: publish a "jump to source" request for the current view.
   void _jumpToSource() {
     if (widget.syncController == null || !_controller.isReady) return;
@@ -581,6 +590,44 @@ class _PdfViewerState extends State<PdfViewer> {
           minScale: 0.5,
           maxScale: 5.0,
           viewerOverlayBuilder: (context, size, handleLinkTap) => [
+            // Transparent track overlay: intercepts taps on the right scrollbar
+            // track and navigates by page instead of jumping to the tap position.
+            // Must come before PdfViewerScrollThumb so the thumb sits on top
+            // and its pan handler still wins for drag gestures.
+            ListenableBuilder(
+              listenable: _controller,
+              builder: (ctx, _) {
+                if (!_controller.isReady) return const SizedBox.shrink();
+                final view = _controller.visibleRect;
+                final all = _controller.documentSize;
+                if (all.height <= view.height) return const SizedBox.shrink();
+                const thumbH = 40.0;
+                const thumbW = 25.0;
+                const margin = 2.0;
+                final y = (-_controller.value.y / (all.height - view.height))
+                    .clamp(0.0, 1.0);
+                final vh = view.height * _controller.currentZoom - thumbH;
+                if (vh <= 0) return const SizedBox.shrink();
+                final thumbTop = y * vh;
+                return Positioned(
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: thumbW + margin * 2,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTapUp: (details) {
+                      final tapY = details.localPosition.dy;
+                      if (tapY < thumbTop) {
+                        _navigatePage(-1);
+                      } else if (tapY > thumbTop + thumbH) {
+                        _navigatePage(1);
+                      }
+                    },
+                  ),
+                );
+              },
+            ),
             pdfrx.PdfViewerScrollThumb(
               controller: _controller,
               orientation: ScrollbarOrientation.right,
@@ -602,17 +649,26 @@ class _PdfViewerState extends State<PdfViewer> {
       ),
     );
 
+    final Map<ShortcutActivator, VoidCallback> shortcuts = {
+      const SingleActivator(LogicalKeyboardKey.arrowUp, control: true): () => _navigatePage(-1),
+      const SingleActivator(LogicalKeyboardKey.arrowDown, control: true): () => _navigatePage(1),
+    };
+
     if (widget.syncController != null) {
+      shortcuts[const SingleActivator(
+          LogicalKeyboardKey.keyJ, control: true, shift: true)] = _jumpToSource;
       viewer = GestureDetector(
         behavior: HitTestBehavior.translucent,
         onSecondaryTapDown: (details) => _showJumpToSourceMenu(details.globalPosition),
         child: CallbackShortcuts(
-          bindings: {
-            const SingleActivator(LogicalKeyboardKey.keyJ,
-                control: true, shift: true): _jumpToSource,
-          },
+          bindings: shortcuts,
           child: Focus(child: viewer),
         ),
+      );
+    } else {
+      viewer = CallbackShortcuts(
+        bindings: shortcuts,
+        child: Focus(child: viewer),
       );
     }
 
